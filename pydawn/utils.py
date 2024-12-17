@@ -71,9 +71,9 @@ class PyDawnUtils:
         buffer_desc.mappedAtCreation = False
         return webgpu.wgpuDeviceCreateBuffer(device, buffer_desc)
 
-    def write_buffer(self, device, buf, offset, src):
+    def write_buffer(self, buf, offset, src):
         src_pointer = (ctypes.c_uint8 * len(src)).from_buffer(src)
-        webgpu.wgpuQueueWriteBuffer(self.queue, buf, offset, ctypes.cast(src_pointer, ctypes.POINTER(ctypes.c_void_p)), len(src))
+        webgpu.wgpuQueueWriteBuffer(self.queue, buf, offset, src_pointer, len(src))
 
     def map(self, buf, size):
         cb_info = webgpu.WGPUBufferMapCallbackInfo2()

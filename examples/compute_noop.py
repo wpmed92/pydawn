@@ -20,14 +20,19 @@ if __name__ == "__main__":
         var<storage,read_write> data2: array<f16>;
 
         @compute
-        @workgroup_size(4)
+        @workgroup_size(1)
         fn main(@builtin(global_invocation_id) index: vec3<u32>) {
             let i: u32 = index.x;
-            data2[i] = 0.123;
+            data2[i] = data1[i]*2;
         }
     """
     shader_module = pd_utils.create_shader_module(shader_source)
-    buffer1 = pd_utils.create_buffer(dev, 16, webgpu.WGPUBufferUsage_Storage)
+    buffer1 = pd_utils.create_buffer(dev, 16, webgpu.WGPUBufferUsage_Storage | webgpu.WGPUBufferUsage_CopyDst)
+
+    # Pass-in test data
+    half_float_array = np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0], dtype=np.float16)
+    pd_utils.write_buffer(buffer1, 0, bytearray(half_float_array.tobytes()))
+
     buffer2 = pd_utils.create_buffer(dev, 16, webgpu.WGPUBufferUsage_Storage | webgpu.WGPUBufferUsage_CopySrc)
 
     # Setup layout and bindings
@@ -74,7 +79,7 @@ if __name__ == "__main__":
 
     pd_utils.set_pipeline(compute_pass, compute_pipeline)
     pd_utils.set_bind_group(compute_pass, bind_group)
-    pd_utils.dispatch_workgroups(compute_pass, 4, 1, 1)
+    pd_utils.dispatch_workgroups(compute_pass, 8, 1, 1)
     pd_utils.end_compute_pass(compute_pass)
     cb_buffer = pd_utils.command_encoder_finish(command_encoder)
     pd_utils.submit([cb_buffer])
