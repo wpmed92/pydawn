@@ -6,6 +6,7 @@
 # LONGDOUBLE_SIZE is: 8
 #
 import ctypes
+from pathlib import Path
 
 
 class AsDictMixin:
@@ -144,7 +145,9 @@ def char_pointer_cast(string, encoding='utf-8'):
 
 
 _libraries = {}
-_libraries['libwebgpu_dawn.dylib'] = ctypes.CDLL('/Users/ahmedharmouche/Documents/dawn/install/Release/lib/libwebgpu_dawn.dylib')
+root_project_path = Path(__file__).resolve().parent.parent
+dll_path = root_project_path / 'resources' / 'libwebgpu_dawn.dylib'
+_libraries['libwebgpu_dawn.dylib'] = ctypes.CDLL(str(dll_path))
 
 
 WGPUFlags = ctypes.c_uint64
