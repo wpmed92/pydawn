@@ -40,7 +40,7 @@ def request_adapter_sync(power_preference):
     adapterOptions = webgpu.WGPURequestAdapterOptions()
     adapterOptions.powerPreference = power_preference
     wait(webgpu.wgpuInstanceRequestAdapterF(instance, adapterOptions, cbInfo))
-    return container
+    return container.value
 
 def request_device_sync(adapter, required_features):
     deviceDesc = webgpu.WGPUDeviceDescriptor()
@@ -65,7 +65,7 @@ def request_device_sync(adapter, required_features):
     cbInfo.callback = webgpu.WGPURequestDeviceCallback(reqDeviceCb)
     wait(webgpu.wgpuAdapterRequestDeviceF(adapter, deviceDesc, cbInfo))
 
-    return result
+    return result.value
 
 def create_buffer(device, size, usage):
     buffer_desc = webgpu.WGPUBufferDescriptor()
@@ -207,7 +207,7 @@ def create_compute_pipeline(device, layout, compute):
     webgpu.wgpuDevicePushErrorScope(device, webgpu.WGPUErrorFilter_Validation)
     wait(webgpu.wgpuDeviceCreateComputePipelineAsync2(device, compute_desc, cb_info))
     get_error(device)
-    return result_container
+    return result_container.value
 
 def create_command_encoder(device):
     encoder_desc = webgpu.WGPUCommandEncoderDescriptor()

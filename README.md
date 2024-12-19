@@ -8,13 +8,11 @@
 from pydawn import utils, webgpu
 
 if __name__ == "__main__":
-    pd_utils = utils.PyDawnUtils()
-
     # Creating an adapter
-    adapter = pd_utils.request_adapter_sync(power_preference=webgpu.WGPUPowerPreference_HighPerformance)
+    adapter = utils.request_adapter_sync(power_preference=webgpu.WGPUPowerPreference_HighPerformance)
 
     # Creating a device with shader f16 extension
-    dev = pd_utils.request_device_sync(adapter, [webgpu.WGPUFeatureName_ShaderF16])
+    dev = utils.request_device_sync(adapter, [webgpu.WGPUFeatureName_ShaderF16])
 ```
 
 For more details see `examples/compute_noop.py`

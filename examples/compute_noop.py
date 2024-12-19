@@ -3,10 +3,10 @@ import numpy as np
 
 if __name__ == "__main__":
     # Creating an adapter
-    adapter = utils.request_adapter_sync(power_preference=webgpu.WGPUPowerPreference_HighPerformance).value
+    adapter = utils.request_adapter_sync(power_preference=webgpu.WGPUPowerPreference_HighPerformance)
 
     # Creating a device
-    dev = utils.request_device_sync(adapter, [webgpu.WGPUFeatureName_ShaderF16]).value
+    dev = utils.request_device_sync(adapter, [webgpu.WGPUFeatureName_ShaderF16])
 
     # Creating a shader module
     shader_source = """
@@ -71,7 +71,7 @@ if __name__ == "__main__":
         device=dev,
         layout=pipeline_layout,
         compute={"module": shader_module, "entry_point": "main"},
-    ).value
+    )
 
     command_encoder = utils.create_command_encoder(dev)
     compute_pass = utils.begin_compute_pass(command_encoder)
