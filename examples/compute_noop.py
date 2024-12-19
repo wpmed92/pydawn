@@ -2,13 +2,11 @@ from pydawn import utils, webgpu
 import numpy as np
 
 if __name__ == "__main__":
-    pd_utils = utils.PyDawnUtils()
-
     # Creating an adapter
-    adapter = pd_utils.request_adapter_sync(power_preference=webgpu.WGPUPowerPreference_HighPerformance)
+    adapter = utils.request_adapter_sync(power_preference=webgpu.WGPUPowerPreference_HighPerformance).value
 
     # Creating a device
-    dev = pd_utils.request_device_sync(adapter, [webgpu.WGPUFeatureName_ShaderF16])
+    dev = utils.request_device_sync(adapter, [webgpu.WGPUFeatureName_ShaderF16]).value
 
     # Creating a shader module
     shader_source = """
@@ -26,14 +24,14 @@ if __name__ == "__main__":
             data2[i] = data1[i]*2;
         }
     """
-    shader_module = pd_utils.create_shader_module(shader_source)
-    buffer1 = pd_utils.create_buffer(dev, 16, webgpu.WGPUBufferUsage_Storage | webgpu.WGPUBufferUsage_CopyDst)
+    shader_module = utils.create_shader_module(dev, shader_source)
+    buffer1 = utils.create_buffer(dev, 16, webgpu.WGPUBufferUsage_Storage | webgpu.WGPUBufferUsage_CopyDst)
 
     # Pass-in test data
     half_float_array = np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0], dtype=np.float16)
-    pd_utils.write_buffer(buffer1, 0, bytearray(half_float_array.tobytes()))
+    utils.write_buffer(dev, buffer1, 0, bytearray(half_float_array.tobytes()))
 
-    buffer2 = pd_utils.create_buffer(dev, 16, webgpu.WGPUBufferUsage_Storage | webgpu.WGPUBufferUsage_CopySrc)
+    buffer2 = utils.create_buffer(dev, 16, webgpu.WGPUBufferUsage_Storage | webgpu.WGPUBufferUsage_CopySrc)
 
     # Setup layout and bindings
     binding_layouts = [
@@ -64,26 +62,27 @@ if __name__ == "__main__":
     ]
 
     # Creating bind group layout
-    bind_group_layout = pd_utils.create_bind_group_layout(entries=binding_layouts)
-    pipeline_layout = pd_utils.create_pipeline_layout(bind_group_layouts=[bind_group_layout])
-    bind_group = pd_utils.create_bind_group(layout=bind_group_layout, entries=bindings)
+    bind_group_layout = utils.create_bind_group_layout(device=dev, entries=binding_layouts)
+    pipeline_layout = utils.create_pipeline_layout(device=dev, bind_group_layouts=[bind_group_layout])
+    bind_group = utils.create_bind_group(device=dev, layout=bind_group_layout, entries=bindings)
 
     # Create and run the pipeline
-    compute_pipeline = pd_utils.create_compute_pipeline(
+    compute_pipeline = utils.create_compute_pipeline(
+        device=dev,
         layout=pipeline_layout,
         compute={"module": shader_module, "entry_point": "main"},
-    )
+    ).value
 
-    command_encoder = pd_utils.create_command_encoder()
-    compute_pass = pd_utils.begin_compute_pass(command_encoder)
+    command_encoder = utils.create_command_encoder(dev)
+    compute_pass = utils.begin_compute_pass(command_encoder)
 
-    pd_utils.set_pipeline(compute_pass, compute_pipeline)
-    pd_utils.set_bind_group(compute_pass, bind_group)
-    pd_utils.dispatch_workgroups(compute_pass, 8, 1, 1)
-    pd_utils.end_compute_pass(compute_pass)
-    cb_buffer = pd_utils.command_encoder_finish(command_encoder)
-    pd_utils.submit([cb_buffer])
-    byte_array = pd_utils.read_buffer(buffer2)
+    utils.set_pipeline(compute_pass, compute_pipeline)
+    utils.set_bind_group(compute_pass, bind_group)
+    utils.dispatch_workgroups(compute_pass, 8, 1, 1)
+    utils.end_compute_pass(compute_pass)
+    cb_buffer = utils.command_encoder_finish(command_encoder)
+    utils.submit(dev, [cb_buffer])
+    byte_array = utils.read_buffer(dev, buffer2)
 
     half_float_array = np.frombuffer(byte_array, dtype=np.float16)
     print(half_float_array)
