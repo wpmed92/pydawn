@@ -214,6 +214,15 @@ def create_command_encoder(device):
     command_encoder = webgpu.wgpuDeviceCreateCommandEncoder(device, encoder_desc)
     return command_encoder
 
+def create_query_set(device, type, count):
+    desc = webgpu.WGPUQuerySetDescriptor()
+    desc.type = type
+    desc.count = count
+    return webgpu.wgpuDeviceCreateQuerySet(device, desc)
+
+def resolve_query_set(command_encoder, query_set, first_query, query_count, destination, destination_offset):
+    webgpu.wgpuCommandEncoderResolveQuerySet(command_encoder, query_set, first_query, query_count, destination, destination_offset)
+
 def supported_features(adapter):
     supported_features = webgpu.WGPUSupportedFeatures()
     webgpu.wgpuAdapterGetFeatures(adapter, supported_features)
@@ -224,8 +233,15 @@ def supported_features(adapter):
 
     return features
     
-def begin_compute_pass(command_encoder):
-    return webgpu.wgpuCommandEncoderBeginComputePass(command_encoder, webgpu.WGPUComputePassDescriptor())
+def begin_compute_pass(command_encoder, writes = None):
+    desc = webgpu.WGPUComputePassDescriptor()
+    if writes != None:
+        timestamp_writes = webgpu.WGPUComputePassTimestampWrites()
+        timestamp_writes.querySet = writes["query_set"]
+        timestamp_writes.beginningOfPassWriteIndex = writes["beginning_of_pass_write_index"]
+        timestamp_writes.endOfPassWriteIndex = writes["end_of_pass_write_index"]
+        desc.timestampWrites = ctypes.pointer(timestamp_writes)
+    return webgpu.wgpuCommandEncoderBeginComputePass(command_encoder, desc)
 
 def set_pipeline(compute_encoder, pipeline):
     webgpu.wgpuComputePassEncoderSetPipeline(compute_encoder, pipeline)
