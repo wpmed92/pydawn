@@ -8,7 +8,7 @@ setup(
     version="0.1.0",
     author="Ahmed Harmouche",
     author_email="ahmedharmouche92@gmail.com",
-    description="A Python interface for WebGPU using Dawn.",
+    description="A Python interface for the Dawn WebGPU engine.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/wpmed92/pydawn",
