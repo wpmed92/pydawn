@@ -1,0 +1,11 @@
+LICENSE
+README.md
+setup.py
+pydawn/__init__.py
+pydawn/utils.py
+pydawn/webgpu.py
+pydawn.egg-info/PKG-INFO
+pydawn.egg-info/SOURCES.txt
+pydawn.egg-info/dependency_links.txt
+pydawn.egg-info/top_level.txt
+pydawn/resources/libwebgpu_dawn.dylib
