@@ -4,7 +4,7 @@ from pathlib import Path
 long_description = Path("README.md").read_text()
 
 setup(
-    name="pydawn",
+    name="dawn-python",
     version="0.1.0",
     author="Ahmed Harmouche",
     author_email="ahmedharmouche92@gmail.com",
@@ -15,7 +15,7 @@ setup(
     packages=find_packages(),
     platforms="macOS",
     package_data={
-        "pydawn": ["resources/libwebgpu_dawn.dylib"]
+        "pydawn": ["lib/libwebgpu_dawn.dylib"]
     },
     classifiers=[
         "Programming Language :: Python :: 3",
