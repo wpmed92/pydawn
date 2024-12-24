@@ -44,6 +44,7 @@ def request_adapter_sync(power_preference):
     return container.value
 
 def request_device_sync(adapter, required_features):
+    assert adapter != None, "adapter should not be none"
     device_desc = webgpu.WGPUDeviceDescriptor()
 
     # Disable "timestamp_quantization" for nanosecond precision: https://developer.chrome.com/blog/new-in-webgpu-120
