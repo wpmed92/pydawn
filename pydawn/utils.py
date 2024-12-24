@@ -20,6 +20,9 @@ def to_wgpu_str(str):
     view.length = len(byte_str)
     return view
 
+def to_c_string(str):
+    return ctypes.create_string_buffer(str.encode('utf-8'))
+
 def wait(future):
     info = webgpu.WGPUFutureWaitInfo()
     info.future = future
@@ -44,15 +47,32 @@ def request_adapter_sync(power_preference):
 
 def request_device_sync(adapter, required_features):
     deviceDesc = webgpu.WGPUDeviceDescriptor()
+
+    # Disable "timestamp_quantization" for nanosecond precision: https://developer.chrome.com/blog/new-in-webgpu-120
+    toggleDesc = webgpu.WGPUDawnTogglesDescriptor()
+    toggleDesc.chain.sType = webgpu.WGPUSType_DawnTogglesDescriptor
+    toggleDesc.enabledToggleCount = 1
+    unsafe_apis = ctypes.cast(ctypes.pointer(to_c_string("allow_unsafe_apis")), ctypes.POINTER(ctypes.c_char))
+    toggleDesc.enabledToggles =  ctypes.pointer(unsafe_apis)
+    toggleDesc.disabledToggleCount = 1
+    ts_quant = ctypes.cast(ctypes.pointer(to_c_string("timestamp_quantization")), ctypes.POINTER(ctypes.c_char))
+    toggleDesc.disabledToggles = ctypes.pointer(ts_quant)
+    deviceDesc.nextInChain = ctypes.cast(ctypes.pointer(toggleDesc), ctypes.POINTER(webgpu.struct_WGPUChainedStruct))
+
+    # Populate required features
     feature_array_type = webgpu.WGPUFeatureName * len(required_features)
     feature_array = feature_array_type(*required_features)
     deviceDesc.requiredFeatureCount = len(required_features)
     deviceDesc.requiredFeatures = ctypes.cast(feature_array, ctypes.POINTER(webgpu.WGPUFeatureName))
+
+    # Limits
     supported_limits = webgpu.WGPUSupportedLimits()
     webgpu.wgpuAdapterGetLimits(adapter, ctypes.cast(ctypes.pointer(supported_limits),ctypes.POINTER(webgpu.struct_WGPUSupportedLimits)))
     limits = webgpu.WGPURequiredLimits()
     limits.limits = supported_limits.limits
     deviceDesc.requiredLimits = ctypes.cast(ctypes.pointer(limits),ctypes.POINTER(webgpu.struct_WGPURequiredLimits))
+
+    # Request device
     cbInfo = webgpu.WGPURequestDeviceCallbackInfo()
     cbInfo.nextInChain = None
     cbInfo.mode = webgpu.WGPUCallbackMode_WaitAnyOnly
@@ -235,6 +255,7 @@ def supported_features(adapter):
     
 def begin_compute_pass(command_encoder, writes = None):
     desc = webgpu.WGPUComputePassDescriptor()
+    desc.nextInChain = None
     if writes != None:
         timestamp_writes = webgpu.WGPUComputePassTimestampWrites()
         timestamp_writes.querySet = writes["query_set"]

@@ -22,7 +22,7 @@ if __name__ == "__main__":
         fn main(@builtin(global_invocation_id) index: vec3<u32>) {
             let i: u32 = index.x;
             // Run a noop loop so that timestamp query shows non-zero compute runtime
-            for (var k = 0; k < 1000; k++) {
+            for (var k = 0; k < 100; k++) {
                 data2[0] = 1.0;
             }
             data2[i] = data1[i]*2;
