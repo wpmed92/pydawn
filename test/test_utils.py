@@ -11,7 +11,7 @@ class TestUtils(unittest.TestCase):
     def test_create_buffer(self):
         size = 16
         usage = webgpu.WGPUBufferUsage_Storage
-        buf = utils.create_buffer(self.device, size, webgpu.WGPUBufferUsage_Storage)
+        buf = utils.create_buffer(self.device, size, usage)
         actual_size = webgpu.wgpuBufferGetSize(buf)
         actual_usage = webgpu.wgpuBufferGetUsage(buf)
         self.assertEqual(actual_size, size, f"unexpected buffer size: (actual) {actual_size} != (expected) {size}")
