@@ -27,4 +27,4 @@ jobs:
           pip install pytest
 
       - name: Run tests
-        run: PYTHONPATH="./pydawn" python -m pytest test/test_utils.py
+        run: PYTHONPATH="./pydawn" python -m pytest test/
