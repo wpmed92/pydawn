@@ -3,7 +3,7 @@ import numpy as np
 from pydawn import utils, webgpu
 
 class TestComputeShader(unittest.TestCase):
-    def test_compute_shader_doubles_values(self):
+    def test_f16_compute(self):
         adapter = utils.request_adapter_sync(power_preference=webgpu.WGPUPowerPreference_HighPerformance)
         dev = utils.request_device_sync(adapter, [webgpu.WGPUFeatureName_ShaderF16])
 
