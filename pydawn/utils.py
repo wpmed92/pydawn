@@ -142,16 +142,15 @@ def create_shader_module(device, source):
     shader.chain.sType = webgpu.WGPUSType_ShaderSourceWGSL
     module = webgpu.WGPUShaderModuleDescriptor()
     module.nextInChain = ctypes.cast(ctypes.pointer(shader), ctypes.POINTER(webgpu.struct_WGPUChainedStruct))
+
+    # Check compiler error
+    webgpu.wgpuDevicePushErrorScope(device, webgpu.WGPUErrorFilter_Validation)
     shader_module = webgpu.wgpuDeviceCreateShaderModule(device, module)
-    cb_info = webgpu.WGPUCompilationInfoCallbackInfo2()
-    cb_info.nextInChain = None
-    cb_info.mode = webgpu.WGPUCallbackMode_WaitAnyOnly
+    compiler_error = get_error(device)
 
-    def cb(status, info, u1, u2):
-        assert status == webgpu.WGPUCompilationInfoRequestStatus_Success, "Failed to create shader module"
+    if compiler_error:
+        raise RuntimeError(f"Shader compilation failed: {compiler_error}")
 
-    cb_info.callback = webgpu.WGPUCompilationInfoCallback2(cb)
-    wait(webgpu.wgpuShaderModuleGetCompilationInfo2(shader_module, cb_info, None))
     return shader_module
 
 def create_bind_group_layout(device, entries):
@@ -299,10 +298,12 @@ def get_error(device):
     cb_info = webgpu.WGPUPopErrorScopeCallbackInfo()
     cb_info.nextInChain = None
     cb_info.mode = webgpu.WGPUCallbackMode_WaitAnyOnly
+    result_container = ResultContainer()
 
     def cb(status, type, str, i2):
-        if (from_wgpu_str(str) != ""):
-            print(f"error={from_wgpu_str(str)}")
+        if type != webgpu.WGPUErrorType_NoError:
+            result_container.value = from_wgpu_str(str)
 
     cb_info.callback = webgpu.WGPUPopErrorScopeCallback(cb)
     wait(webgpu.wgpuDevicePopErrorScopeF(device, cb_info))
+    return result_container.value

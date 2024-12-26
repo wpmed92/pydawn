@@ -42,5 +42,21 @@ class TestUtils(unittest.TestCase):
         shader_module = utils.create_shader_module(self.device, shader_source)
         self.assertIsNotNone(shader_module, "shader_module should not be None")
 
+    def test_compiler_error(self):
+        with self.assertRaises(RuntimeError) as ctx:
+            error_shader_source = """
+                @group(0) @binding(0)
+                var<storage,read> data1: array<f15>;
+
+                @compute
+                @workgroup_size(1)
+                fn main(@builtin(global_invocation_id) index: vec3<u32>) {
+                    let i: u32 = index.x;
+                    data2[i] = data1[i];
+                }
+            """
+            utils.create_shader_module(self.device, error_shader_source)
+        self.assertIn("unresolved type 'f15'", str(ctx.exception))
+
 if __name__ == "__main__":
     unittest.main()
