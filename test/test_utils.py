@@ -58,5 +58,24 @@ class TestUtils(unittest.TestCase):
             utils.create_shader_module(self.device, error_shader_source)
         self.assertIn("unresolved type 'f15'", str(ctx.exception))
 
+    def test_request_adapter_error(self):
+        with self.assertRaises(RuntimeError) as ctx:
+            utils.request_adapter_sync(webgpu.WGPUPowerPreference_HighPerformance, webgpu.WGPUBackendType_Vulkan)
+
+        self.assertIn("No supported adapters", str(ctx.exception))
+
+    def test_request_device_error(self):
+        with self.assertRaises(RuntimeError) as ctx:
+            utils.request_device_sync(self.adapter, [webgpu.WGPUFeatureName_D3D11MultithreadProtected])
+
+        self.assertIn("Invalid feature required", str(ctx.exception))
+
+    def test_map_buffer_error(self):
+        with self.assertRaises(RuntimeError) as ctx:
+            buf = utils.create_buffer(self.device, 4, webgpu.WGPUBufferUsage_Storage | webgpu.WGPUBufferUsage_MapRead | webgpu.WGPUBufferUsage_MapWrite)
+            utils.map_buffer(buf, 4)
+
+        self.assertIn("Failed to map buffer", str(ctx.exception))
+
 if __name__ == "__main__":
     unittest.main()

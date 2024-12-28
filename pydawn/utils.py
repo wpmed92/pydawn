@@ -3,6 +3,8 @@ import ctypes
 
 class ResultContainer:
     def __init__(self):
+        self.msg = None
+        self.status = None
         self.value = None
 
 instDesc = webgpu.WGPUInstanceDescriptor()
@@ -28,20 +30,27 @@ def wait(future):
     status = webgpu.wgpuInstanceWaitAny(instance, 1, info, 2**64 - 1)
     assert status == webgpu.WGPUWaitStatus_Success, f"Future failed"
 
-def request_adapter_sync(power_preference):
+def request_adapter_sync(power_preference, backend_type = webgpu.WGPUBackendType_Metal):
     cb_info = webgpu.WGPURequestAdapterCallbackInfo()
     cb_info.nextInChain = None
     cb_info.mode = webgpu.WGPUCallbackMode_WaitAnyOnly
-    container = ResultContainer()
+    result = ResultContainer()
 
-    def cb(status, adapter, string, _):
-        container.value = adapter
+    def cb(status, adapter, msg, _):
+        result.status = status
+        result.value = adapter
+        result.msg = from_wgpu_str(msg)
 
     cb_info.callback = webgpu.WGPURequestAdapterCallback(cb)
     adapterOptions = webgpu.WGPURequestAdapterOptions()
     adapterOptions.powerPreference = power_preference
+    adapterOptions.backendType = backend_type
     wait(webgpu.wgpuInstanceRequestAdapterF(instance, adapterOptions, cb_info))
-    return container.value
+
+    if result.status != webgpu.WGPURequestAdapterStatus_Success:
+        raise RuntimeError(f"Error requesting adapter: [{webgpu.WGPURequestAdapterStatus__enumvalues[result.status]}] {result.msg}")
+
+    return result.value
 
 def request_device_sync(adapter, required_features):
     assert adapter != None, "adapter should not be none"
@@ -77,12 +86,16 @@ def request_device_sync(adapter, required_features):
     cb_info.mode = webgpu.WGPUCallbackMode_WaitAnyOnly
     result = ResultContainer()
 
-    def cb(status, deviceImpl, i1, i2):
-        assert status == webgpu.WGPURequestDeviceStatus_Success, f"Failed to request device={webgpu.WGPURequestDeviceStatus__enumvalues[status]}"
-        result.value = deviceImpl
-    
+    def cb(status, device_impl, msg, _):
+        result.status = status
+        result.value = device_impl
+        result.msg = from_wgpu_str(msg)
+
     cb_info.callback = webgpu.WGPURequestDeviceCallback(cb)
     wait(webgpu.wgpuAdapterRequestDeviceF(adapter, device_desc, cb_info))
+
+    if result.status != webgpu.WGPURequestDeviceStatus_Success:
+        raise RuntimeError(f"Failed to request device: [{webgpu.WGPURequestDeviceStatus__enumvalues[result.status]}] {result.msg}")
 
     return result.value
 
@@ -102,14 +115,17 @@ def map_buffer(buf, size):
     cb_info = webgpu.WGPUBufferMapCallbackInfo2()
     cb_info.nextInChain = None
     cb_info.mode = webgpu.WGPUCallbackMode_WaitAnyOnly
+    result = ResultContainer()
 
-    def cb(status, str, i1, i2):
-        assert status == webgpu.WGPUBufferMapAsyncStatus_Success, f"Failed to map buffer: {webgpu.WGPUBufferMapAsyncStatus__enumvalues[status]}"
-        if status != webgpu.WGPUBufferMapAsyncStatus_Success:
-            print(f"msg={from_wgpu_str(str)}")
+    def cb(status, msg, u1, u2):
+        result.status = status
+        result.msg = from_wgpu_str(msg)
 
     cb_info.callback = webgpu.WGPUBufferMapCallback2(cb)
     wait(webgpu.wgpuBufferMapAsync2(buf, webgpu.WGPUMapMode_Read, 0, size, cb_info))
+
+    if result.status != webgpu.WGPUBufferMapAsyncStatus_Success:
+        raise RuntimeError(f"Failed to map buffer: [{webgpu.WGPUBufferMapAsyncStatus__enumvalues[result.status]}] {result.msg}")
 
 def copy_buffer_to_buffer(cmd_encoder, src, src_offset, dst, dst_offset, size):
     webgpu.wgpuCommandEncoderCopyBufferToBuffer(cmd_encoder, src, src_offset, dst, dst_offset, size)
@@ -146,7 +162,7 @@ def create_shader_module(device, source):
     # Check compiler error
     webgpu.wgpuDevicePushErrorScope(device, webgpu.WGPUErrorFilter_Validation)
     shader_module = webgpu.wgpuDeviceCreateShaderModule(device, module)
-    compiler_error = get_error(device)
+    compiler_error = pop_error(device)
 
     if compiler_error:
         raise RuntimeError(f"Shader compilation failed: {compiler_error}")
@@ -213,20 +229,23 @@ def create_compute_pipeline(device, layout, compute):
     cb_info = webgpu.WGPUCreateComputePipelineAsyncCallbackInfo2()
     cb_info.nextInChain = None
     cb_info.mode = webgpu.WGPUCallbackMode_WaitAnyOnly
-    result_container = ResultContainer()
+    result = ResultContainer()
 
-    def cb(status, compute_pipeline_impl, msg, i1, i2):
-        if status != webgpu.WGPUCreatePipelineAsyncStatus_Success:
-            print(f"error={from_wgpu_str(msg)}")
-        assert status == webgpu.WGPUCreatePipelineAsyncStatus_Success, f"Validation error={webgpu.WGPUCreatePipelineAsyncStatus__enumvalues[status]}"
-        result_container.value = compute_pipeline_impl
+    def cb(status, compute_pipeline_impl, msg, u1, u2):
+        result.status = status
+        result.msg = from_wgpu_str(msg)
+        result.value = compute_pipeline_impl
 
     cb_info.callback = webgpu.WGPUCreateComputePipelineAsyncCallback2(cb)
 
     webgpu.wgpuDevicePushErrorScope(device, webgpu.WGPUErrorFilter_Validation)
     wait(webgpu.wgpuDeviceCreateComputePipelineAsync2(device, compute_desc, cb_info))
-    get_error(device)
-    return result_container.value
+    maybe_error = pop_error(device)
+
+    if result.status != webgpu.WGPUCreatePipelineAsyncStatus_Success:
+        raise RuntimeError(f"Error creating pipeline: [{webgpu.WGPUCreatePipelineAsyncStatus__enumvalues[result.status]}] {result.msg}, {maybe_error}")
+
+    return result.value
 
 def create_command_encoder(device):
     encoder_desc = webgpu.WGPUCommandEncoderDescriptor()
@@ -287,14 +306,18 @@ def sync(device):
     cb_info = webgpu.WGPUQueueWorkDoneCallbackInfo2()
     cb_info.nextInChain = None
     cb_info.mode = webgpu.WGPUCallbackMode_WaitAnyOnly
+    result = ResultContainer()
 
-    def cb(status, i1, i2):
-        assert status == webgpu.WGPUQueueWorkDoneStatus_Success, f"Submitted work failed: {webgpu.WGPUQueueWorkDoneStatus__enumvalues[status]}"
+    def cb(status, u1, u2):
+        result.status = status
 
     cb_info.callback = webgpu.WGPUQueueWorkDoneCallback2(cb)
     wait(webgpu.wgpuQueueOnSubmittedWorkDone2(webgpu.wgpuDeviceGetQueue(device), cb_info))
 
-def get_error(device):
+    if result.status != webgpu.WGPUQueueWorkDoneStatus_Success:
+        raise RuntimeError(f"Submitted work failed: [{webgpu.WGPUQueueWorkDoneStatus__enumvalues[result.status]}]")
+
+def pop_error(device):
     cb_info = webgpu.WGPUPopErrorScopeCallbackInfo()
     cb_info.nextInChain = None
     cb_info.mode = webgpu.WGPUCallbackMode_WaitAnyOnly
