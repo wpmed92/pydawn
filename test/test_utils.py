@@ -77,5 +77,30 @@ class TestUtils(unittest.TestCase):
 
         self.assertIn("Failed to map buffer", str(ctx.exception))
 
+    def test_create_bind_group_layout_error(self):
+        with self.assertRaises(RuntimeError) as ctx:
+            num_bufs = 11
+            bind_group_layouts = [{
+                    "binding": i,
+                    "visibility": webgpu.WGPUShaderStage_Compute,
+                    "buffer": {"type": webgpu.WGPUBufferBindingType_Storage},
+                } for i in range(num_bufs)]
+            utils.create_bind_group_layout(self.device, bind_group_layouts)
+
+        self.assertIn(f"The number of storage buffers ({num_bufs}) in the Compute stage exceeds the maximum per-stage limit", str(ctx.exception))
+
+    def test_create_pipeline_layout_error(self):
+        with self.assertRaises(RuntimeError) as ctx:
+            bind_group_layouts = [{
+                    "binding": i,
+                    "visibility": webgpu.WGPUShaderStage_Fragment,
+                    "buffer": {"type": webgpu.WGPUBufferBindingType_Storage},
+                } for i in range(11)]
+            # Disable validation when creating bind group layout to catch the error later
+            bind_group_layout = utils.create_bind_group_layout(self.device, bind_group_layouts, validate=False)
+            utils.create_pipeline_layout(self.device, [bind_group_layout])
+
+        self.assertIn(f"Error creating pipeline layout: [Invalid BindGroupLayout (unlabeled)] is invalid.", str(ctx.exception))
+
 if __name__ == "__main__":
     unittest.main()
