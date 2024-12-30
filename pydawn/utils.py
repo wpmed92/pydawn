@@ -145,11 +145,14 @@ def read_buffer(dev, buf):
     byte_array = (ctypes.c_uint8 * size).from_address(void_ptr.value)
     result = bytearray(byte_array)
     webgpu.wgpuBufferUnmap(tmp_buffer)
-    free_buffer(tmp_buffer)
+    destroy_buffer(tmp_buffer)
     return memoryview(result).cast("B")
 
-def free_buffer(buf):
+def release_buffer(buf):
     webgpu.wgpuBufferRelease(buf)
+
+def destroy_buffer(buf):
+    webgpu.wgpuBufferDestroy(buf)
 
 def create_shader_module(device, source):
     shader = webgpu.WGPUShaderModuleWGSLDescriptor()
