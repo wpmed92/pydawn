@@ -22,7 +22,16 @@ class TestUtils(unittest.TestCase):
         test_src = [1, 2, 3, 4]
         utils.write_buffer(self.device, buf, 0, test_src)
         out = utils.read_buffer(self.device, buf)
-        self.assertEqual(list(out), test_src, f"buffer mismatch: (actual) {test_src} != (expected) {out}")
+        self.assertEqual(list(out), test_src, f"buffer mismatch: (actual) {test_src} != (expected) {list(out)}")
+
+    def test_copy_buffer_to_buffer(self):
+        src = utils.create_buffer(self.device, 4, webgpu.WGPUBufferUsage_Storage | webgpu.WGPUBufferUsage_CopySrc | webgpu.WGPUBufferUsage_CopyDst)
+        dst = utils.create_buffer(self.device, 4, webgpu.WGPUBufferUsage_Storage | webgpu.WGPUBufferUsage_CopySrc | webgpu.WGPUBufferUsage_CopyDst)
+        test_src = [4, 8, 16, 32]
+        utils.write_buffer(self.device, src, 0, test_src)
+        utils.copy_buffer_to_buffer(self.device, src, 0, dst, 0, 4)
+        dst_out = utils.read_buffer(self.device, dst)
+        self.assertEqual(list(dst_out), test_src, f"buffer mismatch: (actual) {test_src} != (expected) {list(dst_out)}")
 
     def test_create_shader_module(self):
         shader_source = """

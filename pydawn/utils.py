@@ -127,17 +127,19 @@ def map_buffer(buf, size):
     if result.status != webgpu.WGPUBufferMapAsyncStatus_Success:
         raise RuntimeError(f"Failed to map buffer: [{webgpu.WGPUBufferMapAsyncStatus__enumvalues[result.status]}] {result.msg}")
 
-def copy_buffer_to_buffer(cmd_encoder, src, src_offset, dst, dst_offset, size):
-    webgpu.wgpuCommandEncoderCopyBufferToBuffer(cmd_encoder, src, src_offset, dst, dst_offset, size)
+def copy_buffer_to_buffer(device, src, src_offset, dst, dst_offset, size):
+    encoder = create_command_encoder(device)
+    webgpu.wgpuCommandEncoderCopyBufferToBuffer(encoder, src, src_offset, dst, dst_offset, size)
+    cb = command_encoder_finish(encoder)
+    submit(device, [cb])
+    webgpu.wgpuCommandBufferRelease(cb)
+    webgpu.wgpuCommandEncoderRelease(encoder)
 
 def read_buffer(dev, buf):
     size = webgpu.wgpuBufferGetSize(buf)
     tmp_usage = webgpu.WGPUBufferUsage_CopyDst | webgpu.WGPUBufferUsage_MapRead
     tmp_buffer = create_buffer(dev, size, tmp_usage)
-    encoder = create_command_encoder(dev)
-    copy_buffer_to_buffer(encoder, buf, 0, tmp_buffer, 0, size)
-    cb = command_encoder_finish(encoder)
-    submit(dev, [cb])
+    copy_buffer_to_buffer(dev, buf, 0, tmp_buffer, 0, size)
     sync(dev)
     map_buffer(tmp_buffer, size)
     ptr = webgpu.wgpuBufferGetConstMappedRange(tmp_buffer, 0, size)
