@@ -10,7 +10,7 @@ on:
 
 jobs:
   test:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
@@ -21,10 +21,11 @@ jobs:
         with:
           python-version: 3.9
 
-      - name: Install dependencies
+      - name: Install Vulkan and dependencies
         run: |
-          python -m pip install --upgrade pip
+          sudo apt update -y || true
+          sudo apt install -y libegl1-mesa libgl1-mesa-dri libxcb-xfixes0-dev mesa-vulkan-drivers
           pip install pytest
 
       - name: Run tests
-        run: PYTHONPATH="./pydawn" python -m pytest test/test_utils.py
+        run: PYTHONPATH="./pydawn" python -m pytest test/
