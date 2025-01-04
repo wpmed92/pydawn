@@ -27,5 +27,6 @@ jobs:
           sudo apt install -y libegl1-mesa libgl1-mesa-dri libxcb-xfixes0-dev mesa-vulkan-drivers
           pip install pytest
 
+
       - name: Run tests
         run: PYTHONPATH="./pydawn" python -m pytest test/
