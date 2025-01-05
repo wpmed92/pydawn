@@ -141,12 +141,10 @@ def char_pointer_cast(string, encoding='utf-8'):
     string = ctypes.c_char_p(string)
     return ctypes.cast(string, ctypes.POINTER(ctypes.c_char))
 
-from pathlib import Path
+
 
 _libraries = {}
-root_project_path = Path(__file__).resolve().parent
-dll_path = root_project_path / 'lib' / 'libwebgpu_dawn.so'
-_libraries['libwebgpu_dawn.so'] = ctypes.CDLL(str(dll_path))
+_libraries['libwebgpu_dawn.so'] = ctypes.CDLL('/app/libwebgpu_dawn.so')
 
 
 WGPUFlags = ctypes.c_uint64
