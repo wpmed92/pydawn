@@ -30,7 +30,7 @@ def wait(future):
     status = webgpu.wgpuInstanceWaitAny(instance, 1, info, 2**64 - 1)
     assert status == webgpu.WGPUWaitStatus_Success, f"Future failed"
 
-def request_adapter_sync(power_preference, backend_type = webgpu.WGPUBackendType_Metal):
+def request_adapter_sync(power_preference, backend_type = webgpu.WGPUBackendType_Vulkan):
     cb_info = webgpu.WGPURequestAdapterCallbackInfo()
     cb_info.nextInChain = None
     cb_info.mode = webgpu.WGPUCallbackMode_WaitAnyOnly
