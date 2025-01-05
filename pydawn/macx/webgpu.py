@@ -3,9 +3,10 @@
 # TARGET arch is: []
 # WORD_SIZE is: 8
 # POINTER_SIZE is: 8
-# LONGDOUBLE_SIZE is: 16
+# LONGDOUBLE_SIZE is: 8
 #
 import ctypes
+from pathlib import Path
 
 
 class AsDictMixin:
@@ -119,10 +120,10 @@ class Union(ctypes.Union, AsDictMixin):
 c_int128 = ctypes.c_ubyte*16
 c_uint128 = c_int128
 void = None
-if ctypes.sizeof(ctypes.c_longdouble) == 16:
+if ctypes.sizeof(ctypes.c_longdouble) == 8:
     c_long_double_t = ctypes.c_longdouble
 else:
-    c_long_double_t = ctypes.c_ubyte*16
+    c_long_double_t = ctypes.c_ubyte*8
 
 def string_cast(char_pointer, encoding='utf-8', errors='strict'):
     value = ctypes.cast(char_pointer, ctypes.c_char_p).value
@@ -142,7 +143,7 @@ def char_pointer_cast(string, encoding='utf-8'):
     return ctypes.cast(string, ctypes.POINTER(ctypes.c_char))
 
 
-from pathlib import Path
+
 _libraries = {}
 root_project_path = Path(__file__).resolve().parent
 dll_path = root_project_path / 'lib' / 'libwebgpu_dawn.so'
