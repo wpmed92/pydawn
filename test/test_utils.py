@@ -69,7 +69,7 @@ class TestUtils(unittest.TestCase):
 
     def test_request_adapter_error(self):
         with self.assertRaises(RuntimeError) as ctx:
-            utils.request_adapter_sync(webgpu.WGPUPowerPreference_HighPerformance, webgpu.WGPUBackendType_Vulkan)
+            utils.request_adapter_sync(webgpu.WGPUPowerPreference_HighPerformance, webgpu.WGPUBackendType_D3D11)
 
         self.assertIn("No supported adapters", str(ctx.exception))
 
