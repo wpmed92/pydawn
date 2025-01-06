@@ -24,7 +24,7 @@ jobs:
       - name: Install Vulkan and dependencies
         run: |
           sudo apt update -y || true
-          sudo apt install -y libegl1-mesa libgl1-mesa-dri libxcb-xfixes0-dev mesa-vulkan-drivers
+          sudo apt install -y libegl1-mesa libgl1-mesa-dri libxcb-xfixes0-dev mesa-vulkan-drivers libegl1 libegl-dev
           pip install pytest numpy
 
       - name: Run tests
