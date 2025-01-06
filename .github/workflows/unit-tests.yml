@@ -24,13 +24,11 @@ jobs:
       - name: Install Vulkan and dependencies
         run: |
           sudo apt update -y || true
-          sudo apt install -y libegl1-mesa libgl1-mesa-dri libxcb-xfixes0-dev mesa-vulkan-drivers libegl1 libegl-dev xvfb
+          sudo apt install -y mesa-vulkan-drivers vulkan-utils libvulkan-dev
           pip install pytest numpy
       
-      - name: Start virtual display
-        run: |
-          export DISPLAY=:99
-          Xvfb :99 -screen 0 1920x1080x24 &
-          sleep 3
+      - name: Verify Vulkan installation
+        run: vulkaninfo || echo "Vulkan setup failed"
+        
       - name: Run tests
         run: PYTHONPATH="./pydawn" python -m pytest test/
