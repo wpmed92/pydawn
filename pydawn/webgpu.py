@@ -142,10 +142,22 @@ def char_pointer_cast(string, encoding='utf-8'):
     return ctypes.cast(string, ctypes.POINTER(ctypes.c_char))
 
 from pathlib import Path
+
 _libraries = {}
 root_project_path = Path(__file__).resolve().parent
 dll_path = root_project_path / 'lib' / 'libwebgpu_dawn.so'
 _libraries['libwebgpu_dawn.so'] = ctypes.CDLL(str(dll_path))
+
+class FunctionFactoryStub:
+    def __getattr__(self, _):
+      return ctypes.CFUNCTYPE(lambda y:y)
+
+# libraries['FIXME_STUB'] explanation
+# As you did not list (-l libraryname.so) a library that exports this function
+# This is a non-working stub instead. 
+# You can either re-run clan2py with -l /path/to/library.so
+# Or manually fix this by comment the ctypes.CDLL loading
+_libraries['FIXME_STUB'] = FunctionFactoryStub() #  ctypes.CDLL('FIXME_STUB')
 
 
 WGPUFlags = ctypes.c_uint32
@@ -4205,7 +4217,7 @@ WGPUProcTextureViewRelease = ctypes.CFUNCTYPE(None, ctypes.POINTER(struct_WGPUTe
 wgpuAdapterInfoFreeMembers = _libraries['libwebgpu_dawn.so'].wgpuAdapterInfoFreeMembers
 wgpuAdapterInfoFreeMembers.restype = None
 wgpuAdapterInfoFreeMembers.argtypes = [WGPUAdapterInfo]
-wgpuAdapterPropertiesFreeMembers = _libraries['libwebgpu_dawn.so'].wgpuAdapterPropertiesFreeMembers
+wgpuAdapterPropertiesFreeMembers = _libraries['FIXME_STUB'].wgpuAdapterPropertiesFreeMembers
 wgpuAdapterPropertiesFreeMembers.restype = None
 wgpuAdapterPropertiesFreeMembers.argtypes = [WGPUAdapterProperties]
 wgpuAdapterPropertiesMemoryHeapsFreeMembers = _libraries['libwebgpu_dawn.so'].wgpuAdapterPropertiesMemoryHeapsFreeMembers
@@ -4236,7 +4248,7 @@ wgpuAdapterCreateDevice = _libraries['libwebgpu_dawn.so'].wgpuAdapterCreateDevic
 wgpuAdapterCreateDevice.restype = WGPUDevice
 wgpuAdapterCreateDevice.argtypes = [WGPUAdapter, ctypes.POINTER(struct_WGPUDeviceDescriptor)]
 size_t = ctypes.c_uint64
-wgpuAdapterEnumerateFeatures = _libraries['libwebgpu_dawn.so'].wgpuAdapterEnumerateFeatures
+wgpuAdapterEnumerateFeatures = _libraries['FIXME_STUB'].wgpuAdapterEnumerateFeatures
 wgpuAdapterEnumerateFeatures.restype = size_t
 wgpuAdapterEnumerateFeatures.argtypes = [WGPUAdapter, ctypes.POINTER(WGPUFeatureName)]
 wgpuAdapterGetFormatCapabilities = _libraries['libwebgpu_dawn.so'].wgpuAdapterGetFormatCapabilities
@@ -4251,7 +4263,7 @@ wgpuAdapterGetInstance.argtypes = [WGPUAdapter]
 wgpuAdapterGetLimits = _libraries['libwebgpu_dawn.so'].wgpuAdapterGetLimits
 wgpuAdapterGetLimits.restype = WGPUStatus
 wgpuAdapterGetLimits.argtypes = [WGPUAdapter, ctypes.POINTER(struct_WGPUSupportedLimits)]
-wgpuAdapterGetProperties = _libraries['libwebgpu_dawn.so'].wgpuAdapterGetProperties
+wgpuAdapterGetProperties = _libraries['FIXME_STUB'].wgpuAdapterGetProperties
 wgpuAdapterGetProperties.restype = WGPUStatus
 wgpuAdapterGetProperties.argtypes = [WGPUAdapter, ctypes.POINTER(struct_WGPUAdapterProperties)]
 wgpuAdapterHasFeature = _libraries['libwebgpu_dawn.so'].wgpuAdapterHasFeature
@@ -4508,7 +4520,7 @@ wgpuDeviceCreateSampler.argtypes = [WGPUDevice, ctypes.POINTER(struct_WGPUSample
 wgpuDeviceCreateShaderModule = _libraries['libwebgpu_dawn.so'].wgpuDeviceCreateShaderModule
 wgpuDeviceCreateShaderModule.restype = WGPUShaderModule
 wgpuDeviceCreateShaderModule.argtypes = [WGPUDevice, ctypes.POINTER(struct_WGPUShaderModuleDescriptor)]
-wgpuDeviceCreateSwapChain = _libraries['libwebgpu_dawn.so'].wgpuDeviceCreateSwapChain
+wgpuDeviceCreateSwapChain = _libraries['FIXME_STUB'].wgpuDeviceCreateSwapChain
 wgpuDeviceCreateSwapChain.restype = WGPUSwapChain
 wgpuDeviceCreateSwapChain.argtypes = [WGPUDevice, WGPUSurface, ctypes.POINTER(struct_WGPUSwapChainDescriptor)]
 wgpuDeviceCreateTexture = _libraries['libwebgpu_dawn.so'].wgpuDeviceCreateTexture
@@ -4517,7 +4529,7 @@ wgpuDeviceCreateTexture.argtypes = [WGPUDevice, ctypes.POINTER(struct_WGPUTextur
 wgpuDeviceDestroy = _libraries['libwebgpu_dawn.so'].wgpuDeviceDestroy
 wgpuDeviceDestroy.restype = None
 wgpuDeviceDestroy.argtypes = [WGPUDevice]
-wgpuDeviceEnumerateFeatures = _libraries['libwebgpu_dawn.so'].wgpuDeviceEnumerateFeatures
+wgpuDeviceEnumerateFeatures = _libraries['FIXME_STUB'].wgpuDeviceEnumerateFeatures
 wgpuDeviceEnumerateFeatures.restype = size_t
 wgpuDeviceEnumerateFeatures.argtypes = [WGPUDevice, ctypes.POINTER(WGPUFeatureName)]
 wgpuDeviceForceLoss = _libraries['libwebgpu_dawn.so'].wgpuDeviceForceLoss
@@ -4535,7 +4547,7 @@ wgpuDeviceGetLimits.argtypes = [WGPUDevice, ctypes.POINTER(struct_WGPUSupportedL
 wgpuDeviceGetQueue = _libraries['libwebgpu_dawn.so'].wgpuDeviceGetQueue
 wgpuDeviceGetQueue.restype = WGPUQueue
 wgpuDeviceGetQueue.argtypes = [WGPUDevice]
-wgpuDeviceGetSupportedSurfaceUsage = _libraries['libwebgpu_dawn.so'].wgpuDeviceGetSupportedSurfaceUsage
+wgpuDeviceGetSupportedSurfaceUsage = _libraries['FIXME_STUB'].wgpuDeviceGetSupportedSurfaceUsage
 wgpuDeviceGetSupportedSurfaceUsage.restype = WGPUTextureUsageFlags
 wgpuDeviceGetSupportedSurfaceUsage.argtypes = [WGPUDevice, WGPUSurface]
 wgpuDeviceHasFeature = _libraries['libwebgpu_dawn.so'].wgpuDeviceHasFeature
@@ -4565,7 +4577,7 @@ wgpuDevicePopErrorScopeF.argtypes = [WGPUDevice, WGPUPopErrorScopeCallbackInfo]
 wgpuDevicePushErrorScope = _libraries['libwebgpu_dawn.so'].wgpuDevicePushErrorScope
 wgpuDevicePushErrorScope.restype = None
 wgpuDevicePushErrorScope.argtypes = [WGPUDevice, WGPUErrorFilter]
-wgpuDeviceSetDeviceLostCallback = _libraries['libwebgpu_dawn.so'].wgpuDeviceSetDeviceLostCallback
+wgpuDeviceSetDeviceLostCallback = _libraries['FIXME_STUB'].wgpuDeviceSetDeviceLostCallback
 wgpuDeviceSetDeviceLostCallback.restype = None
 wgpuDeviceSetDeviceLostCallback.argtypes = [WGPUDevice, WGPUDeviceLostCallback, ctypes.POINTER(None)]
 wgpuDeviceSetLabel = _libraries['libwebgpu_dawn.so'].wgpuDeviceSetLabel
@@ -4574,7 +4586,7 @@ wgpuDeviceSetLabel.argtypes = [WGPUDevice, ctypes.POINTER(ctypes.c_char)]
 wgpuDeviceSetLoggingCallback = _libraries['libwebgpu_dawn.so'].wgpuDeviceSetLoggingCallback
 wgpuDeviceSetLoggingCallback.restype = None
 wgpuDeviceSetLoggingCallback.argtypes = [WGPUDevice, WGPULoggingCallback, ctypes.POINTER(None)]
-wgpuDeviceSetUncapturedErrorCallback = _libraries['libwebgpu_dawn.so'].wgpuDeviceSetUncapturedErrorCallback
+wgpuDeviceSetUncapturedErrorCallback = _libraries['FIXME_STUB'].wgpuDeviceSetUncapturedErrorCallback
 wgpuDeviceSetUncapturedErrorCallback.restype = None
 wgpuDeviceSetUncapturedErrorCallback.argtypes = [WGPUDevice, WGPUErrorCallback, ctypes.POINTER(None)]
 wgpuDeviceTick = _libraries['libwebgpu_dawn.so'].wgpuDeviceTick
@@ -4929,7 +4941,7 @@ wgpuSurfaceGetCapabilities.argtypes = [WGPUSurface, WGPUAdapter, ctypes.POINTER(
 wgpuSurfaceGetCurrentTexture = _libraries['libwebgpu_dawn.so'].wgpuSurfaceGetCurrentTexture
 wgpuSurfaceGetCurrentTexture.restype = None
 wgpuSurfaceGetCurrentTexture.argtypes = [WGPUSurface, ctypes.POINTER(struct_WGPUSurfaceTexture)]
-wgpuSurfaceGetPreferredFormat = _libraries['libwebgpu_dawn.so'].wgpuSurfaceGetPreferredFormat
+wgpuSurfaceGetPreferredFormat = _libraries['FIXME_STUB'].wgpuSurfaceGetPreferredFormat
 wgpuSurfaceGetPreferredFormat.restype = WGPUTextureFormat
 wgpuSurfaceGetPreferredFormat.argtypes = [WGPUSurface, WGPUAdapter]
 wgpuSurfacePresent = _libraries['libwebgpu_dawn.so'].wgpuSurfacePresent
@@ -4944,19 +4956,19 @@ wgpuSurfaceAddRef.argtypes = [WGPUSurface]
 wgpuSurfaceRelease = _libraries['libwebgpu_dawn.so'].wgpuSurfaceRelease
 wgpuSurfaceRelease.restype = None
 wgpuSurfaceRelease.argtypes = [WGPUSurface]
-wgpuSwapChainGetCurrentTexture = _libraries['libwebgpu_dawn.so'].wgpuSwapChainGetCurrentTexture
+wgpuSwapChainGetCurrentTexture = _libraries['FIXME_STUB'].wgpuSwapChainGetCurrentTexture
 wgpuSwapChainGetCurrentTexture.restype = WGPUTexture
 wgpuSwapChainGetCurrentTexture.argtypes = [WGPUSwapChain]
-wgpuSwapChainGetCurrentTextureView = _libraries['libwebgpu_dawn.so'].wgpuSwapChainGetCurrentTextureView
+wgpuSwapChainGetCurrentTextureView = _libraries['FIXME_STUB'].wgpuSwapChainGetCurrentTextureView
 wgpuSwapChainGetCurrentTextureView.restype = WGPUTextureView
 wgpuSwapChainGetCurrentTextureView.argtypes = [WGPUSwapChain]
-wgpuSwapChainPresent = _libraries['libwebgpu_dawn.so'].wgpuSwapChainPresent
+wgpuSwapChainPresent = _libraries['FIXME_STUB'].wgpuSwapChainPresent
 wgpuSwapChainPresent.restype = None
 wgpuSwapChainPresent.argtypes = [WGPUSwapChain]
-wgpuSwapChainAddRef = _libraries['libwebgpu_dawn.so'].wgpuSwapChainAddRef
+wgpuSwapChainAddRef = _libraries['FIXME_STUB'].wgpuSwapChainAddRef
 wgpuSwapChainAddRef.restype = None
 wgpuSwapChainAddRef.argtypes = [WGPUSwapChain]
-wgpuSwapChainRelease = _libraries['libwebgpu_dawn.so'].wgpuSwapChainRelease
+wgpuSwapChainRelease = _libraries['FIXME_STUB'].wgpuSwapChainRelease
 wgpuSwapChainRelease.restype = None
 wgpuSwapChainRelease.argtypes = [WGPUSwapChain]
 wgpuTextureCreateErrorView = _libraries['libwebgpu_dawn.so'].wgpuTextureCreateErrorView
