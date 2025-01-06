@@ -146,6 +146,8 @@ from pathlib import Path
 _libraries = {}
 root_project_path = Path(__file__).resolve().parent
 dll_path = root_project_path / 'lib' / 'libwebgpu_dawn.so'
+
+vulkan = ctypes.CDLL('/usr/lib/x86_64-linux-gnu/libvulkan.so.1', mode=ctypes.RTLD_GLOBAL)
 _libraries['libwebgpu_dawn.so'] = ctypes.CDLL(str(dll_path))
 
 class FunctionFactoryStub:
