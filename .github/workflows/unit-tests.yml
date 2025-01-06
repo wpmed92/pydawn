@@ -31,4 +31,4 @@ jobs:
         run: vulkaninfo || echo "Vulkan setup failed"
         
       - name: Run tests
-        run: PYTHONPATH="./pydawn" python -m pytest test/
+        run: PYTHONPATH="./pydawn" python -m pytest --capture=no test/
