@@ -10,7 +10,6 @@ class ResultContainer:
 instDesc = webgpu.WGPUInstanceDescriptor()
 instDesc.features.timedWaitAnyEnable = True
 instance = webgpu.wgpuCreateInstance(instDesc)
-print(f"instance={instance}")
 
 def to_c_string(str):
     return ctypes.create_string_buffer(str.encode('utf-8'))
@@ -28,11 +27,8 @@ def to_wgpu_str(str):
 def wait(future):
     info = webgpu.WGPUFutureWaitInfo()
     info.future = future
-    status = webgpu.wgpuInstanceWaitAny(instance, 1, info,  10**6)
-
-    if status != webgpu.WGPUWaitStatus_Success:
-        raise RuntimeError(f"Error requesting adapter: [{webgpu.WGPUWaitStatus__enumvalues[status]}]")
-    
+    status = webgpu.wgpuInstanceWaitAny(instance, 1, info, 2**64 - 1)
+    assert status == webgpu.WGPUWaitStatus_Success, f"Future failed"
 
 def request_adapter_sync(power_preference, backend_type = webgpu.WGPUBackendType_Vulkan):
     cb_info = webgpu.WGPURequestAdapterCallbackInfo()
