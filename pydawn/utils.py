@@ -28,7 +28,7 @@ def to_wgpu_str(str):
 def wait(future):
     info = webgpu.WGPUFutureWaitInfo()
     info.future = future
-    status = webgpu.wgpuInstanceWaitAny(instance, 1, info,  10**9)
+    status = webgpu.wgpuInstanceWaitAny(instance, 1, info,  10**6)
 
     if status != webgpu.WGPUWaitStatus_Success:
         raise RuntimeError(f"Error requesting adapter: [{webgpu.WGPUWaitStatus__enumvalues[status]}]")
