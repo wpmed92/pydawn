@@ -24,7 +24,7 @@ jobs:
       - name: Install Vulkan and dependencies
         run: |
           sudo apt update -y || true
-          sudo apt install -y mesa-vulkan-drivers vulkan-utils libvulkan-dev
+          sudo apt install -y mesa-vulkan-drivers vulkan-tools libvulkan-dev
           pip install pytest numpy
       
       - name: Verify Vulkan installation
