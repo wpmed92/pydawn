@@ -43,8 +43,8 @@ def request_adapter_sync(power_preference, backend_type = webgpu.WGPUBackendType
 
     cb_info.callback = webgpu.WGPURequestAdapterCallback(cb)
     adapterOptions = webgpu.WGPURequestAdapterOptions()
-    adapterOptions.powerPreference = power_preference
-    adapterOptions.backendType = backend_type
+    #adapterOptions.powerPreference = power_preference
+    #adapterOptions.backendType = backend_type
     wait(webgpu.wgpuInstanceRequestAdapterF(instance, adapterOptions, cb_info))
 
     if result.status != webgpu.WGPURequestAdapterStatus_Success:
