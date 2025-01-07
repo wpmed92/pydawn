@@ -1,5 +1,6 @@
 import unittest
 from pydawn import utils, webgpu
+import os
 
 class TestUtils(unittest.TestCase):
     def setUp(self):
@@ -69,9 +70,13 @@ class TestUtils(unittest.TestCase):
 
     def test_request_adapter_error(self):
         with self.assertRaises(RuntimeError) as ctx:
-            utils.request_adapter_sync(webgpu.WGPUPowerPreference_HighPerformance, webgpu.WGPUBackendType_Vulkan)
+            os.environ['BACKEND_TYPE'] = "D3D11"
+            try:
+                utils.request_adapter_sync(webgpu.WGPUPowerPreference_HighPerformance)
+            finally:
+                del os.environ['BACKEND_TYPE']
 
-        self.assertIn("No supported adapters", str(ctx.exception))
+        self.assertIn("Unsupported backend", str(ctx.exception))
 
     def test_request_device_error(self):
         with self.assertRaises(RuntimeError) as ctx:
