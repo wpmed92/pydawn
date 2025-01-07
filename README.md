@@ -36,8 +36,8 @@ For more details see `examples/query_set.py`
 
 ## Supported platforms
 
-- [x] MacOS
-- [ ] Ubuntu
+- [x] MacOS (Metal)
+- [x] Ubuntu (Vulkan)
 - [ ] Windows
 
 ## License
