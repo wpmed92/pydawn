@@ -26,9 +26,6 @@ jobs:
           sudo apt update -y || true
           sudo apt install -y mesa-vulkan-drivers vulkan-tools libvulkan-dev
           pip install pytest numpy
-      
-      - name: Verify Vulkan installation
-        run: vulkaninfo || echo "Vulkan setup failed"
-        
+
       - name: Run tests
         run: PYTHONPATH="./pydawn" BACKEND_TYPE="Vulkan" python -m pytest --capture=no test/
