@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  test:
+  ubuntu-tests:
     runs-on: ubuntu-latest
 
     steps:
@@ -28,4 +28,23 @@ jobs:
           pip install pytest numpy
 
       - name: Run tests
-        run: PYTHONPATH="./pydawn" BACKEND_TYPE="Vulkan" python -m pytest --capture=no test/
+        run: PYTHONPATH="./pydawn" BACKEND_TYPE="Vulkan" python -m pytest test/
+
+  macos-tests:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+
+      - name: Install dependencies
+        run: |
+          pip install pytest numpy
+
+      - name: Run tests
+        run: PYTHONPATH="./pydawn" BACKEND_TYPE="Metal" python -m pytest test/
