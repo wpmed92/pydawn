@@ -1,5 +1,6 @@
 from pydawn import webgpu
 import ctypes
+import os
 
 class ResultContainer:
     def __init__(self):
@@ -10,6 +11,7 @@ class ResultContainer:
 instDesc = webgpu.WGPUInstanceDescriptor()
 instDesc.features.timedWaitAnyEnable = True
 instance = webgpu.wgpuCreateInstance(instDesc)
+supported_backends = { "Metal": webgpu.WGPUBackendType_Metal, "Vulkan": webgpu.WGPUBackendType_Vulkan }
 
 def to_c_string(str):
     return ctypes.create_string_buffer(str.encode('utf-8'))
@@ -30,7 +32,7 @@ def wait(future):
     status = webgpu.wgpuInstanceWaitAny(instance, 1, info, 2**64 - 1)
     assert status == webgpu.WGPUWaitStatus_Success, f"Future failed"
 
-def request_adapter_sync(power_preference, backend_type = webgpu.WGPUBackendType_Vulkan):
+def request_adapter_sync(power_preference):
     cb_info = webgpu.WGPURequestAdapterCallbackInfo()
     cb_info.nextInChain = None
     cb_info.mode = webgpu.WGPUCallbackMode_WaitAnyOnly
@@ -44,7 +46,14 @@ def request_adapter_sync(power_preference, backend_type = webgpu.WGPUBackendType
     cb_info.callback = webgpu.WGPURequestAdapterCallback(cb)
     adapterOptions = webgpu.WGPURequestAdapterOptions()
     adapterOptions.powerPreference = power_preference
-    adapterOptions.backendType = backend_type
+
+    force_backend = os.getenv("BACKEND_TYPE", "").strip()
+
+    if force_backend:
+        if not force_backend in supported_backends:
+            raise RuntimeError(f"Unsupported backend: {force_backend}")
+        adapterOptions.backendType = supported_backends[force_backend]
+
     wait(webgpu.wgpuInstanceRequestAdapterF(instance, adapterOptions, cb_info))
 
     if result.status != webgpu.WGPURequestAdapterStatus_Success:
