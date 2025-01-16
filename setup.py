@@ -1,15 +1,7 @@
 from setuptools import setup, find_packages
 from pathlib import Path
-import platform
 
 long_description = Path("README.md").read_text()
-
-if platform.system() == "Darwin":
-    package_data = {"pydawn": ["lib/libwebgpu_dawn.dylib"]}
-elif platform.system() == "Linux":
-    package_data = {"pydawn": ["lib/libwebgpu_dawn.so"]}
-else:
-    raise RuntimeError("Unsupported platform")
 
 setup(
     name="dawn-python",
@@ -22,7 +14,7 @@ setup(
     url="https://github.com/wpmed92/pydawn",
     packages=find_packages(),
     platforms="macOS",
-    package_data=package_data,
+    package_data={"pydawn": ["lib/libwebgpu_dawn.so", "lib/libwebgpu_dawn.dylib"]},
     classifiers=[
         "Programming Language :: Python :: 3",
         "Operating System :: MacOS",
