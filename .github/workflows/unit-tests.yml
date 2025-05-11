@@ -49,7 +49,7 @@ jobs:
       - name: Run tests
         run: PYTHONPATH="./pydawn" BACKEND_TYPE="Metal" python -m pytest test/
 
-  macos-x86-tests:
+  macos-x86-64-tests:
     runs-on: macos-13
 
     steps:

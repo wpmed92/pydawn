@@ -149,7 +149,7 @@ lib_name = ''
 if platform.system() == 'Darwin':
     arch = platform.machine()
     if arch == 'x86_64':
-        lib_name = 'libwebgpu_dawn_x86.dylib'
+        lib_name = 'libwebgpu_dawn_x86_64.dylib'
     elif arch == 'arm64':
         lib_name = 'libwebgpu_dawn_arm.dylib'
     else:
