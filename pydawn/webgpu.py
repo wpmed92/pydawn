@@ -147,7 +147,13 @@ root_project_path = Path(__file__).resolve().parent
 lib_name = ''
 
 if platform.system() == 'Darwin':
-    lib_name = 'libwebgpu_dawn.dylib'
+    arch = platform.machine()
+    if arch == 'x86_64':
+        lib_name = 'libwebgpu_dawn_x86.dylib'
+    elif arch == 'arm64':
+        lib_name = 'libwebgpu_dawn_arm.dylib'
+    else:
+        raise RuntimeError(f"Unsupported architecture on macOS: {arch}")
 elif platform.system() == 'Linux':
     lib_name = 'libwebgpu_dawn.so'
 else:
