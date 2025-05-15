@@ -67,3 +67,23 @@ jobs:
 
       - name: Run tests
         run: PYTHONPATH="./pydawn" BACKEND_TYPE="Metal" python -m pytest test/
+
+  windows-tests:
+    runs-on: windows-2025
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+
+      - name: Install dependencies
+        run: |
+          pip install pytest numpy
+
+      - name: Run tests
+        run: |
+          PYTHONPATH="./pydawn" BACKEND_TYPE="DirectX12" python -m pytest test/
