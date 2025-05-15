@@ -11,7 +11,8 @@ class ResultContainer:
 instDesc = webgpu.WGPUInstanceDescriptor()
 instDesc.features.timedWaitAnyEnable = True
 instance = webgpu.wgpuCreateInstance(instDesc)
-supported_backends = { "Metal": webgpu.WGPUBackendType_Metal, "Vulkan": webgpu.WGPUBackendType_Vulkan }
+supported_backends = { "Metal": webgpu.WGPUBackendType_Metal, "Vulkan": webgpu.WGPUBackendType_Vulkan, 
+"DirectX11": webgpu.WGPUBackendType_D3D11,  "DirectX12": webgpu.WGPUBackendType_D3D12 }
 
 def to_c_string(str):
     return ctypes.create_string_buffer(str.encode('utf-8'))
@@ -61,7 +62,7 @@ def request_adapter_sync(power_preference):
 
     return result.value
 
-def request_device_sync(adapter, required_features):
+def request_device_sync(adapter, required_features = []):
     assert adapter != None, "adapter should not be none"
     device_desc = webgpu.WGPUDeviceDescriptor()
 

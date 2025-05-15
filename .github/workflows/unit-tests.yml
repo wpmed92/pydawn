@@ -67,3 +67,34 @@ jobs:
 
       - name: Run tests
         run: PYTHONPATH="./pydawn" BACKEND_TYPE="Metal" python -m pytest test/
+
+  windows-tests:
+    runs-on: windows-2025
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+
+      - name: Install dependencies
+        run: |
+          pip install pytest numpy
+
+      - name: Install DXC via NuGet
+        run: |
+          nuget install Microsoft.Direct3D.DXC -OutputDirectory dxc_package
+          copy dxc_package\Microsoft.Direct3D.DXC.*\bin\x64\dxc.exe dxc.exe
+
+      - name: Add DXC to PATH
+        run: |
+          echo "${{ github.workspace }}" >> $GITHUB_PATH
+
+      - name: Run tests
+        run: |
+          set PYTHONPATH=./pydawn
+          set BACKEND_TYPE="DirectX12"
+          python -m pytest test/
