@@ -62,7 +62,7 @@ def request_adapter_sync(power_preference):
 
     return result.value
 
-def request_device_sync(adapter, required_features):
+def request_device_sync(adapter, required_features = []):
     assert adapter != None, "adapter should not be none"
     device_desc = webgpu.WGPUDeviceDescriptor()
 
