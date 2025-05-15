@@ -4,7 +4,7 @@ long_description = Path("README.md").read_text()
 
 setup(
     name="dawn-python",
-    version="0.1.7",
+    version="0.2.0",
     author="Ahmed Harmouche",
     author_email="ahmedharmouche92@gmail.com",
     description="A Python interface for the Dawn WebGPU engine.",
