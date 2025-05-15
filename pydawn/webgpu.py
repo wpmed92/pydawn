@@ -156,6 +156,8 @@ if platform.system() == 'Darwin':
         raise RuntimeError(f"Unsupported architecture on macOS: {arch}")
 elif platform.system() == 'Linux':
     lib_name = 'libwebgpu_dawn.so'
+elif platform.system() == "Windows":
+    lib_name = 'libwebgpu_dawn.dll'
 else:
     raise RuntimeError("Unsupported platform")
 
