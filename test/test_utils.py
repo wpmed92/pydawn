@@ -6,7 +6,7 @@ class TestUtils(unittest.TestCase):
     def setUp(self):
         self.adapter = utils.request_adapter_sync(power_preference=webgpu.WGPUPowerPreference_HighPerformance)
         self.assertIsNotNone(self.adapter, "adapter should not be None")
-        self.device = utils.request_device_sync(self.adapter)
+        self.device = utils.request_device_sync(self.adapter, [])
         self.assertIsNotNone(self.device, "device should not be None")
 
     def test_create_buffer(self):
