@@ -13,7 +13,12 @@ setup(
     url="https://github.com/wpmed92/pydawn",
     packages=find_packages(),
     platforms="macOS",
-    package_data={"pydawn": ["lib/libwebgpu_dawn.so", "lib/libwebgpu_dawn_arm.dylib", "lib/libwebgpu_dawn_x86_64.dylib"]},
+    package_data={"pydawn": [
+        "lib/libwebgpu_dawn.so", 
+        "lib/libwebgpu_dawn_arm.dylib", 
+        "lib/libwebgpu_dawn_x86_64.dylib",
+        "lib/libwebgpu_dawn.dll",
+    ]},
     classifiers=[
         "Programming Language :: Python :: 3",
         "Operating System :: MacOS",
