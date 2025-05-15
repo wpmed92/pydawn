@@ -38,9 +38,9 @@ For more details see `examples/query_set.py`
 
 ## Supported platforms
 
-- [x] MacOS (Metal)
-- [x] Ubuntu (Vulkan)
-- [ ] Windows
+- [x] MacOS (arch: x86_64, arm64, optimal backend: Metal)
+- [x] Ubuntu (arch: x86_64, optimal backend: Vulkan)
+- [x] Windows (arch: x86_64, optimal backend: DirectX)
 
 ## License
 
