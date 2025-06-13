@@ -30,6 +30,27 @@ jobs:
       - name: Run tests
         run: PYTHONPATH="./pydawn" BACKEND_TYPE="Vulkan" python -m pytest test/
 
+  ubuntu-arm-tests:
+    runs-on: ubuntu-22.04-arm
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+
+      - name: Install Vulkan and dependencies
+        run: |
+          sudo apt update -y || true
+          sudo apt install -y mesa-vulkan-drivers vulkan-tools libvulkan-dev
+          pip install pytest numpy
+
+      - name: Run tests
+        run: PYTHONPATH="./pydawn" BACKEND_TYPE="Vulkan" python -m pytest test/
+
   macos-arm-tests:
     runs-on: macos-latest
 
