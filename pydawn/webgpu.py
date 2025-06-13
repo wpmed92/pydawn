@@ -148,14 +148,16 @@ lib_name = ''
 
 if platform.system() == 'Darwin':
     arch = platform.machine()
-    if arch == 'x86_64':
-        lib_name = 'libwebgpu_dawn_x86_64.dylib'
-    elif arch == 'arm64':
-        lib_name = 'libwebgpu_dawn_arm.dylib'
+    if (arch == 'x86_64') or (arch == 'arm64'):
+        lib_name = f'libwebgpu_dawn_{arch}.dylib'
     else:
         raise RuntimeError(f"Unsupported architecture on macOS: {arch}")
 elif platform.system() == 'Linux':
-    lib_name = 'libwebgpu_dawn.so'
+    arch = platform.machine()
+    if (arch == 'x86_64') or (arch == 'arm64'):
+        lib_name = f'libwebgpu_dawn_{arch}.so'
+    else:
+        raise RuntimeError(f"Unsupported architecture on Linux: {arch}")
 elif platform.system() == "Windows":
     lib_name = 'libwebgpu_dawn.dll'
 else:
