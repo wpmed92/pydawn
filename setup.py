@@ -4,7 +4,7 @@ long_description = Path("README.md").read_text()
 
 setup(
     name="dawn-python",
-    version="0.2.0",
+    version="0.3.0",
     author="Ahmed Harmouche",
     author_email="ahmedharmouche92@gmail.com",
     description="A Python interface for the Dawn WebGPU engine.",
@@ -15,7 +15,7 @@ setup(
     platforms="macOS",
     package_data={"pydawn": [
         "lib/libwebgpu_dawn_x86_64.so",
-        "lib/libwebgpu_dawn_arm64.so",
+        "lib/libwebgpu_dawn_aarch64.so",
         "lib/libwebgpu_dawn_x86_64.dylib",
         "lib/libwebgpu_dawn_arm64.dylib",
         "lib/libwebgpu_dawn.dll",
