@@ -38,9 +38,11 @@ For more details see `examples/query_set.py`
 
 ## Supported platforms
 
-- [x] MacOS (arch: x86_64, arm64, optimal backend: Metal)
-- [x] Ubuntu (arch: x86_64, optimal backend: Vulkan)
-- [x] Windows (arch: x86_64, optimal backend: DirectX)
+| Platform | Architectures     | Backend         |
+|----------|-------------------|-----------------|
+| macOS    | `x86_64`, `arm64` | Metal           |
+| Ubuntu   | `x86_64`, `arm64` | Vulkan          |
+| Windows  | `x86_64`          | DirectX         |
 
 ## License
 
