@@ -11,7 +11,7 @@ class ResultContainer:
 instDesc = webgpu.WGPUInstanceDescriptor()
 instDesc.features.timedWaitAnyEnable = True
 instance = webgpu.wgpuCreateInstance(instDesc)
-supported_backends = { "Metal": webgpu.WGPUBackendType_Metal, "Vulkan": webgpu.WGPUBackendType_Vulkan, 
+supported_backends = { "Metal": webgpu.WGPUBackendType_Metal, "Vulkan": webgpu.WGPUBackendType_Vulkan,
 "DirectX11": webgpu.WGPUBackendType_D3D11,  "DirectX12": webgpu.WGPUBackendType_D3D12 }
 
 def to_c_string(str):
@@ -219,7 +219,7 @@ def create_bind_group_layout(device, entries, validate=True):
         raise RuntimeError(f"Error creating bind group layout: {layout_error}")
 
     return ret
-    
+
 def create_pipeline_layout(device, bind_group_layouts, validate=True):
     pipeline_layout_desc = webgpu.WGPUPipelineLayoutDescriptor()
     pipeline_layout_desc.bindGroupLayoutCount = len(bind_group_layouts)
@@ -315,7 +315,7 @@ def supported_features(adapter):
         features.append(webgpu.WGPUFeatureName__enumvalues[supported_features.features[i]])
 
     return features
-    
+
 def begin_compute_pass(command_encoder, writes = None):
     desc = webgpu.WGPUComputePassDescriptor()
     desc.nextInChain = None
