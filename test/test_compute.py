@@ -62,8 +62,6 @@ class TestComputeShader(unittest.TestCase):
         np.testing.assert_array_almost_equal(output_data, expected_output, decimal=3)
 
     def test_f16_compute(self):
-        if sys.platform == "win32":
-            self.skipTest("f16 not supported on Windows")
         adapter = utils.request_adapter_sync(power_preference=webgpu.WGPUPowerPreference_HighPerformance)
         dev = utils.request_device_sync(adapter, [webgpu.WGPUFeatureName_ShaderF16])
 

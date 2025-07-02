@@ -1,6 +1,7 @@
 from pydawn import webgpu
 import ctypes
 import os
+import sys
 
 class ResultContainer:
     def __init__(self):
@@ -11,7 +12,7 @@ class ResultContainer:
 instDesc = webgpu.WGPUInstanceDescriptor()
 instDesc.features.timedWaitAnyEnable = True
 instance = webgpu.wgpuCreateInstance(instDesc)
-supported_backends = { "Metal": webgpu.WGPUBackendType_Metal, "Vulkan": webgpu.WGPUBackendType_Vulkan, 
+supported_backends = { "Metal": webgpu.WGPUBackendType_Metal, "Vulkan": webgpu.WGPUBackendType_Vulkan,
 "DirectX11": webgpu.WGPUBackendType_D3D11,  "DirectX12": webgpu.WGPUBackendType_D3D12 }
 
 def to_c_string(str):
@@ -31,7 +32,7 @@ def wait(future):
     info = webgpu.WGPUFutureWaitInfo()
     info.future = future
     status = webgpu.wgpuInstanceWaitAny(instance, 1, info, 2**64 - 1)
-    assert status == webgpu.WGPUWaitStatus_Success, f"Future failed"
+    assert status == webgpu.WGPUWaitStatus_Success, "Future failed"
 
 def request_adapter_sync(power_preference):
     cb_info = webgpu.WGPURequestAdapterCallbackInfo()
@@ -51,7 +52,7 @@ def request_adapter_sync(power_preference):
     force_backend = os.getenv("BACKEND_TYPE", "").strip()
 
     if force_backend:
-        if not force_backend in supported_backends:
+        if force_backend not in supported_backends:
             raise RuntimeError(f"Unsupported backend: {force_backend}")
         adapterOptions.backendType = supported_backends[force_backend]
 
@@ -63,15 +64,29 @@ def request_adapter_sync(power_preference):
     return result.value
 
 def request_device_sync(adapter, required_features = []):
-    assert adapter != None, "adapter should not be none"
+    assert adapter is not None, "adapter should not be none"
     device_desc = webgpu.WGPUDeviceDescriptor()
+
+    toggles = [b"allow_unsafe_apis"]
+    if sys.platform == "win32":
+        # NOTE(irwin): this obscure toggle instructs d3d12 implementation of webgpu in dawn to
+        # use dxc instead of fxc. fxc doesn't support fp16, while dxc does - depending on
+        # hardware support. @ShadersF16_On_Windows
+        toggles.append(b"use_dxc")
+
+    string_buffers = [ctypes.create_string_buffer(t) for t in toggles]
+    string_buffer_pointers = [ctypes.cast(sb, ctypes.POINTER(ctypes.c_char)) for sb in string_buffers]
+
+    toggles_count = len(toggles)
+
+    # Create array of char* (pointer-to-char) with toggles_count elements
+    enabled_toggles_array = (ctypes.POINTER(ctypes.c_char) * toggles_count)(*string_buffer_pointers)
 
     # Disable "timestamp_quantization" for nanosecond precision: https://developer.chrome.com/blog/new-in-webgpu-120
     toggle_desc = webgpu.WGPUDawnTogglesDescriptor()
     toggle_desc.chain.sType = webgpu.WGPUSType_DawnTogglesDescriptor
-    toggle_desc.enabledToggleCount = 1
-    unsafe_apis = ctypes.cast(ctypes.pointer(to_c_string("allow_unsafe_apis")), ctypes.POINTER(ctypes.c_char))
-    toggle_desc.enabledToggles =  ctypes.pointer(unsafe_apis)
+    toggle_desc.enabledToggleCount = toggles_count
+    toggle_desc.enabledToggles = enabled_toggles_array
     toggle_desc.disabledToggleCount = 1
     ts_quant = ctypes.cast(ctypes.pointer(to_c_string("timestamp_quantization")), ctypes.POINTER(ctypes.c_char))
     toggle_desc.disabledToggles = ctypes.pointer(ts_quant)
@@ -205,7 +220,7 @@ def create_bind_group_layout(device, entries, validate=True):
         raise RuntimeError(f"Error creating bind group layout: {layout_error}")
 
     return ret
-    
+
 def create_pipeline_layout(device, bind_group_layouts, validate=True):
     pipeline_layout_desc = webgpu.WGPUPipelineLayoutDescriptor()
     pipeline_layout_desc.bindGroupLayoutCount = len(bind_group_layouts)
@@ -301,11 +316,11 @@ def supported_features(adapter):
         features.append(webgpu.WGPUFeatureName__enumvalues[supported_features.features[i]])
 
     return features
-    
+
 def begin_compute_pass(command_encoder, writes = None):
     desc = webgpu.WGPUComputePassDescriptor()
     desc.nextInChain = None
-    if writes != None:
+    if writes is not None:
         timestamp_writes = webgpu.WGPUComputePassTimestampWrites()
         timestamp_writes.querySet = writes["query_set"]
         timestamp_writes.beginningOfPassWriteIndex = writes["beginning_of_pass_write_index"]

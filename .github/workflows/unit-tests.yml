@@ -117,5 +117,5 @@ jobs:
       - name: Run tests
         run: |
           set PYTHONPATH=./pydawn
-          set BACKEND_TYPE="DirectX12"
+          set BACKEND_TYPE=DirectX12
           python -m pytest test/
