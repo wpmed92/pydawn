@@ -1,6 +1,6 @@
 from pydawn import webgpu
 import ctypes
-import os
+import os, sys
 
 class ResultContainer:
     def __init__(self):
@@ -66,12 +66,26 @@ def request_device_sync(adapter, required_features = []):
     assert adapter != None, "adapter should not be none"
     device_desc = webgpu.WGPUDeviceDescriptor()
 
+    toggles = [b"allow_unsafe_apis"]
+    if sys.platform == "win32":
+        # NOTE(irwin): this obscure toggle instructs d3d12 implementation of webgpu in dawn to
+        # use dxc instead of fxc. fxc doesn't support fp16, while dxc does - depending on
+        # hardware support. @ShadersF16_On_Windows
+        toggles.append(b"use_dxc")
+
+    string_buffers = [ctypes.create_string_buffer(t) for t in toggles]
+    string_buffer_pointers = [ctypes.cast(sb, ctypes.POINTER(ctypes.c_char)) for sb in string_buffers]
+
+    toggles_count = len(toggles)
+
+    # Create array of char* (pointer-to-char) with toggles_count elements
+    enabled_toggles_array = (ctypes.POINTER(ctypes.c_char) * toggles_count)(*string_buffer_pointers)
+
     # Disable "timestamp_quantization" for nanosecond precision: https://developer.chrome.com/blog/new-in-webgpu-120
     toggle_desc = webgpu.WGPUDawnTogglesDescriptor()
     toggle_desc.chain.sType = webgpu.WGPUSType_DawnTogglesDescriptor
-    toggle_desc.enabledToggleCount = 1
-    unsafe_apis = ctypes.cast(ctypes.pointer(to_c_string("allow_unsafe_apis")), ctypes.POINTER(ctypes.c_char))
-    toggle_desc.enabledToggles =  ctypes.pointer(unsafe_apis)
+    toggle_desc.enabledToggleCount = toggles_count
+    toggle_desc.enabledToggles = enabled_toggles_array
     toggle_desc.disabledToggleCount = 1
     ts_quant = ctypes.cast(ctypes.pointer(to_c_string("timestamp_quantization")), ctypes.POINTER(ctypes.c_char))
     toggle_desc.disabledToggles = ctypes.pointer(ts_quant)
