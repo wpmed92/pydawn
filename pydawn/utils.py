@@ -51,7 +51,7 @@ def request_adapter_sync(power_preference):
     force_backend = os.getenv("BACKEND_TYPE", "").strip()
 
     if force_backend:
-        if not force_backend in supported_backends:
+        if force_backend not in supported_backends:
             raise RuntimeError(f"Unsupported backend: {force_backend}")
         adapterOptions.backendType = supported_backends[force_backend]
 
