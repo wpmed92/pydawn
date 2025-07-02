@@ -1,6 +1,7 @@
 from pydawn import webgpu
 import ctypes
-import os, sys
+import os
+import sys
 
 class ResultContainer:
     def __init__(self):
@@ -31,7 +32,7 @@ def wait(future):
     info = webgpu.WGPUFutureWaitInfo()
     info.future = future
     status = webgpu.wgpuInstanceWaitAny(instance, 1, info, 2**64 - 1)
-    assert status == webgpu.WGPUWaitStatus_Success, f"Future failed"
+    assert status == webgpu.WGPUWaitStatus_Success, "Future failed"
 
 def request_adapter_sync(power_preference):
     cb_info = webgpu.WGPURequestAdapterCallbackInfo()
