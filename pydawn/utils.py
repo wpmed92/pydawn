@@ -63,7 +63,7 @@ def request_adapter_sync(power_preference):
     return result.value
 
 def request_device_sync(adapter, required_features = []):
-    assert adapter != None, "adapter should not be none"
+    assert adapter is not None, "adapter should not be none"
     device_desc = webgpu.WGPUDeviceDescriptor()
 
     toggles = [b"allow_unsafe_apis"]
@@ -319,7 +319,7 @@ def supported_features(adapter):
 def begin_compute_pass(command_encoder, writes = None):
     desc = webgpu.WGPUComputePassDescriptor()
     desc.nextInChain = None
-    if writes != None:
+    if writes is not None:
         timestamp_writes = webgpu.WGPUComputePassTimestampWrites()
         timestamp_writes.querySet = writes["query_set"]
         timestamp_writes.beginningOfPassWriteIndex = writes["beginning_of_pass_write_index"]
