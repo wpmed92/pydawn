@@ -5,3 +5,4 @@ dist
 *.egg-info
 .pytest_cache
 build
+node_modules

@@ -1,0 +1,15 @@
+{
+  "name": "webgpuidl",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "parser.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "webidl2": "^24.4.1"
+  }
+}
