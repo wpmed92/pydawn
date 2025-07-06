@@ -20,18 +20,22 @@ for (const astNode of tree) {
         classes += "\nclass " + astNode.name + ":\n";
         console.log("INTERFACE: " + astNode.name);
         console.log("--------------------------")
-        let opOrConstr = false;
+        let attrOpOrConstr = false;
         for (const member of astNode.members) {
             console.log(member.type)
             if (member.type == "attribute") {
                 console.log("   ATTRIBUTE: " + member.name)
                 console.log("   --------------------------")
+                classes += "  @property\n";
+                classes += "  def " + member.name + "(self):\n";
+                classes += "    pass\n";
+                attrOpOrConstr = true;
             }
             if (member.type == "operation") {
                 console.log("   OPERATION: " + member.name)
                 console.log("   --------------------------")
                 classes += "  def " + member.name + "(self";
-                opOrConstr = true;
+                attrOpOrConstr = true;
 
                 for (const argument of member.arguments) {
                     console.log("     arg: " + argument.name)
@@ -42,7 +46,7 @@ for (const astNode of tree) {
                 classes += "    pass\n";
             }
             if (member.type == "constructor") {
-                opOrConstr = true;
+                attrOpOrConstr = true;
                 console.log("   CONSTRUCTOR")
                 console.log("   --------------------------")
                 classes += "  def __init__(self";
@@ -56,7 +60,7 @@ for (const astNode of tree) {
                 classes += selfAssigns;
             }
         }
-        if (!opOrConstr) {
+        if (!attrOpOrConstr) {
             classes += "  pass\n";
         }
         console.log("INHERITANCE")

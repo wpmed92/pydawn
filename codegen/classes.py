@@ -1,6 +1,98 @@
 
 class GPUSupportedLimits:
-  pass
+  @property
+  def maxTextureDimension1D(self):
+    pass
+  @property
+  def maxTextureDimension2D(self):
+    pass
+  @property
+  def maxTextureDimension3D(self):
+    pass
+  @property
+  def maxTextureArrayLayers(self):
+    pass
+  @property
+  def maxBindGroups(self):
+    pass
+  @property
+  def maxBindGroupsPlusVertexBuffers(self):
+    pass
+  @property
+  def maxBindingsPerBindGroup(self):
+    pass
+  @property
+  def maxDynamicUniformBuffersPerPipelineLayout(self):
+    pass
+  @property
+  def maxDynamicStorageBuffersPerPipelineLayout(self):
+    pass
+  @property
+  def maxSampledTexturesPerShaderStage(self):
+    pass
+  @property
+  def maxSamplersPerShaderStage(self):
+    pass
+  @property
+  def maxStorageBuffersPerShaderStage(self):
+    pass
+  @property
+  def maxStorageTexturesPerShaderStage(self):
+    pass
+  @property
+  def maxUniformBuffersPerShaderStage(self):
+    pass
+  @property
+  def maxUniformBufferBindingSize(self):
+    pass
+  @property
+  def maxStorageBufferBindingSize(self):
+    pass
+  @property
+  def minUniformBufferOffsetAlignment(self):
+    pass
+  @property
+  def minStorageBufferOffsetAlignment(self):
+    pass
+  @property
+  def maxVertexBuffers(self):
+    pass
+  @property
+  def maxBufferSize(self):
+    pass
+  @property
+  def maxVertexAttributes(self):
+    pass
+  @property
+  def maxVertexBufferArrayStride(self):
+    pass
+  @property
+  def maxInterStageShaderVariables(self):
+    pass
+  @property
+  def maxColorAttachments(self):
+    pass
+  @property
+  def maxColorAttachmentBytesPerSample(self):
+    pass
+  @property
+  def maxComputeWorkgroupStorageSize(self):
+    pass
+  @property
+  def maxComputeInvocationsPerWorkgroup(self):
+    pass
+  @property
+  def maxComputeWorkgroupSizeX(self):
+    pass
+  @property
+  def maxComputeWorkgroupSizeY(self):
+    pass
+  @property
+  def maxComputeWorkgroupSizeZ(self):
+    pass
+  @property
+  def maxComputeWorkgroupsPerDimension(self):
+    pass
 
 class GPUSupportedFeatures:
   pass
@@ -9,19 +101,63 @@ class WGSLLanguageFeatures:
   pass
 
 class GPUAdapterInfo:
-  pass
+  @property
+  def vendor(self):
+    pass
+  @property
+  def architecture(self):
+    pass
+  @property
+  def device(self):
+    pass
+  @property
+  def description(self):
+    pass
+  @property
+  def subgroupMinSize(self):
+    pass
+  @property
+  def subgroupMaxSize(self):
+    pass
+  @property
+  def isFallbackAdapter(self):
+    pass
 
 class GPU:
   def requestAdapter(self, options):
     pass
   def getPreferredCanvasFormat(self):
     pass
+  @property
+  def wgslLanguageFeatures(self):
+    pass
 
 class GPUAdapter:
+  @property
+  def features(self):
+    pass
+  @property
+  def limits(self):
+    pass
+  @property
+  def info(self):
+    pass
   def requestDevice(self, descriptor):
     pass
 
 class GPUDevice:
+  @property
+  def features(self):
+    pass
+  @property
+  def limits(self):
+    pass
+  @property
+  def adapterInfo(self):
+    pass
+  @property
+  def queue(self):
+    pass
   def destroy(self):
     pass
   def createBuffer(self, descriptor):
@@ -56,6 +192,15 @@ class GPUDevice:
     pass
 
 class GPUBuffer:
+  @property
+  def size(self):
+    pass
+  @property
+  def usage(self):
+    pass
+  @property
+  def mapState(self):
+    pass
   def mapAsync(self, mode, offset, size):
     pass
   def getMappedRange(self, offset, size):
@@ -69,6 +214,30 @@ class GPUTexture:
   def createView(self, descriptor):
     pass
   def destroy(self):
+    pass
+  @property
+  def width(self):
+    pass
+  @property
+  def height(self):
+    pass
+  @property
+  def depthOrArrayLayers(self):
+    pass
+  @property
+  def mipLevelCount(self):
+    pass
+  @property
+  def sampleCount(self):
+    pass
+  @property
+  def dimension(self):
+    pass
+  @property
+  def format(self):
+    pass
+  @property
+  def usage(self):
     pass
 
 class GPUTextureView:
@@ -94,15 +263,37 @@ class GPUShaderModule:
     pass
 
 class GPUCompilationMessage:
-  pass
+  @property
+  def message(self):
+    pass
+  @property
+  def type(self):
+    pass
+  @property
+  def lineNum(self):
+    pass
+  @property
+  def linePos(self):
+    pass
+  @property
+  def offset(self):
+    pass
+  @property
+  def length(self):
+    pass
 
 class GPUCompilationInfo:
-  pass
+  @property
+  def messages(self):
+    pass
 
 class GPUPipelineError:
   def __init__(self,message,options):
       self.message = message
       self.options = options
+  @property
+  def reason(self):
+    pass
 
 class GPUComputePipeline:
   pass
@@ -185,8 +376,17 @@ class GPUQueue:
 class GPUQuerySet:
   def destroy(self):
     pass
+  @property
+  def type(self):
+    pass
+  @property
+  def count(self):
+    pass
 
 class GPUCanvasContext:
+  @property
+  def canvas(self):
+    pass
   def configure(self, configuration):
     pass
   def unconfigure(self):
@@ -197,13 +397,22 @@ class GPUCanvasContext:
     pass
 
 class GPUDeviceLostInfo:
-  pass
+  @property
+  def reason(self):
+    pass
+  @property
+  def message(self):
+    pass
 
 class GPUDevice:
-  pass
+  @property
+  def lost(self):
+    pass
 
 class GPUError:
-  pass
+  @property
+  def message(self):
+    pass
 
 class GPUValidationError:
   def __init__(self,message):
@@ -227,6 +436,11 @@ class GPUUncapturedErrorEvent:
   def __init__(self,type,gpuUncapturedErrorEventInitDict):
       self.type = type
       self.gpuUncapturedErrorEventInitDict = gpuUncapturedErrorEventInitDict
+  @property
+  def error(self):
+    pass
 
 class GPUDevice:
-  pass
+  @property
+  def onuncapturederror(self):
+    pass
