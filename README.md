@@ -36,6 +36,10 @@ For more details see `examples/query_set.py`
 
 `python3 examples/simple_compute.py`
 
+## Projects using pydawn
+
+* [tinygrad](https://github.com/tinygrad/tinygrad) - tinygrad is a deep learning framework, and in its WebGPU backend it uses the Dawn binaries from pydawn. It uses the same autogened python around the binaries as pydawn.
+
 ## Supported platforms
 
 | Platform | Architectures     | Backend         |
