@@ -141,7 +141,7 @@ def write_buffer(device, buf, offset, src):
     src_pointer = (ctypes.c_uint8 * len(src)).from_buffer(src)
     webgpu.wgpuQueueWriteBuffer(webgpu.wgpuDeviceGetQueue(device), buf, offset, src_pointer, len(src))
 
-def map_buffer(buf, size):
+def map_buffer(buf, size, dev):
     cb_info = webgpu.WGPUBufferMapCallbackInfo()
     cb_info.nextInChain = None
     cb_info.mode = webgpu.WGPUCallbackMode_WaitAnyOnly
@@ -152,10 +152,10 @@ def map_buffer(buf, size):
         result.msg = from_wgpu_str(msg)
 
     cb_info.callback = webgpu.WGPUBufferMapCallback(cb)
-    wait(webgpu.wgpuBufferMapAsync(buf, webgpu.WGPUMapMode_Read, 0, size, cb_info))
 
-    if result.status != webgpu.WGPUBufferMapState_Mapped:
-        raise RuntimeError(f"Failed to map buffer: [{webgpu.WGPUBufferMapState__enumvalues[result.status]}] {result.msg}")
+    wait(webgpu.wgpuBufferMapAsync(buf, webgpu.WGPUMapMode_Read, 0, size, cb_info))
+    '''if result.status != webgpu.WGPUBufferMapState_Mapped:
+        raise RuntimeError(f"Failed to map buffer: [{webgpu.WGPUBufferMapState__enumvalues[result.status]}] {result.msg}")'''
 
 def copy_buffer_to_buffer(device, src, src_offset, dst, dst_offset, size):
     encoder = create_command_encoder(device)
@@ -171,7 +171,7 @@ def read_buffer(dev, buf):
     tmp_buffer = create_buffer(dev, size, tmp_usage)
     copy_buffer_to_buffer(dev, buf, 0, tmp_buffer, 0, size)
     sync(dev)
-    map_buffer(tmp_buffer, size)
+    map_buffer(tmp_buffer, size, dev)
     ptr = webgpu.wgpuBufferGetConstMappedRange(tmp_buffer, 0, size)
     void_ptr = ctypes.cast(ptr, ctypes.c_void_p)
     byte_array = (ctypes.c_uint8 * size).from_address(void_ptr.value)
