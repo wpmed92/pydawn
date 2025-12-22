@@ -67,6 +67,53 @@ def request_adapter_sync(power_preference):
 
     return result.value
 
+def get_adapter_info(dev):
+    info = webgpu.WGPUAdapterInfo()
+    subgroup = webgpu.WGPUAdapterPropertiesSubgroupMatrixConfigs()
+
+    # Initialize the chained struct
+    subgroup.chain.sType = webgpu.WGPUSType_AdapterPropertiesSubgroupMatrixConfigs
+    subgroup.chain.next = None
+
+    # nextInChain expects a POINTER, not a value
+    info.nextInChain = ctypes.pointer(subgroup.chain)
+
+    #webgpu.wgpuDevicePushErrorScope(dev, webgpu.WGPUErrorFilter_Validation)
+    status = webgpu.wgpuDeviceGetAdapterInfo(dev, info)
+    #pop_error(dev)
+    
+    it = info.nextInChain
+    print(f"it={it.contents}")
+    try:
+        while it != None and it.contents !=None:
+            if it.contents.sType == webgpu.WGPUSType_AdapterPropertiesSubgroupMatrixConfigs:
+                subgroup_ptr = ctypes.cast(
+                    it,
+                    ctypes.POINTER(webgpu.WGPUAdapterPropertiesSubgroupMatrixConfigs)
+)
+                print(subgroup_ptr.contents.configCount)
+
+                for i in range(0, subgroup_ptr.contents.configCount):
+                    config_ptr = ctypes.cast(
+                    subgroup_ptr.contents.configs,
+                    ctypes.POINTER(webgpu.WGPUSubgroupMatrixConfig))
+                    cfg = config_ptr[i]
+
+                    print(f"Config {i}:")
+                    print("  componentType:", webgpu.WGPUSubgroupMatrixComponentType__enumvalues[cfg.componentType])
+                    print("  resultComponentType:",webgpu.WGPUSubgroupMatrixComponentType__enumvalues[cfg.resultComponentType])
+                    print("  M:", cfg.M)
+                    print("  N:", cfg.N)
+                    print("  K:", cfg.K)
+                
+            it = it.contents.next
+    except ValueError:
+        print("BOOm")
+    #print(it.s)
+
+    print(f"subgroup max size={info.subgroupMaxSize}")
+    print(status)
+
 def request_device_sync(adapter, required_features = []):
     assert adapter is not None, "adapter should not be none"
     device_desc = webgpu.WGPUDeviceDescriptor()
@@ -91,7 +138,7 @@ def request_device_sync(adapter, required_features = []):
     toggle_desc.chain.sType = webgpu.WGPUSType_DawnTogglesDescriptor
     toggle_desc.enabledToggleCount = toggles_count
     toggle_desc.enabledToggles = enabled_toggles_array
-    toggle_desc.disabledToggleCount = 1
+    toggle_desc.disabledToggleCount = 0
     ts_quant = ctypes.cast(ctypes.pointer(to_c_string("timestamp_quantization")), ctypes.POINTER(ctypes.c_char))
     toggle_desc.disabledToggles = ctypes.pointer(ts_quant)
     device_desc.nextInChain = ctypes.cast(ctypes.pointer(toggle_desc), ctypes.POINTER(webgpu.struct_WGPUChainedStruct))
@@ -317,6 +364,7 @@ def supported_features(adapter):
     webgpu.wgpuAdapterGetFeatures(adapter, supported_features)
     features = []
 
+    print(supported_features)
     for i in range(supported_features.featureCount):
         features.append(webgpu.WGPUFeatureName__enumvalues[supported_features.features[i]])
 

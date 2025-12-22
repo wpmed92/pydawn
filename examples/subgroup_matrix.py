@@ -6,35 +6,36 @@ if __name__ == "__main__":
     adapter = utils.request_adapter_sync(power_preference=webgpu.WGPUPowerPreference_HighPerformance)
 
     # Creating a device
-    dev = utils.request_device_sync(adapter, [webgpu.WGPUFeatureName_ShaderF16, 
-                                              webgpu.WGPUFeatureName_ChromiumExperimentalSubgroupMatrix])
+    dev = utils.request_device_sync(adapter, [webgpu.WGPUFeatureName_ChromiumExperimentalSubgroupMatrix])
 
+    print(utils.supported_features(adapter))
+    utils.get_adapter_info(dev)
     # Creating a shader module
     shader_source = """
-        enable f16;
         enable chromium_experimental_subgroup_matrix;
-
         @group(0) @binding(0)
         var<storage,read> data1: array<f32>;
 
         @group(0) @binding(1)
-        var<storage,read_write> data2: array<f16>;
+        var<storage,read_write> data2: array<f32>;
 
+        
+        var<workgroup> arg_0 : array<f32, 64>;
         @compute
         @workgroup_size(64)
         fn main(@builtin(global_invocation_id) index: vec3<u32>) {
-            let m = subgroup_matrix_right<f16, 8, 8>(42);
-            subgroupMatrixStore(&data2, 0, m, false, 64);
+            var a = subgroup_matrix_left<f32, 8, 8>(42.0);
+            subgroupMatrixStore(&data2, 0, a, false, 8);
         }
     """
     shader_module = utils.create_shader_module(dev, shader_source)
-    buffer1 = utils.create_buffer(dev, 64*2, webgpu.WGPUBufferUsage_Storage | webgpu.WGPUBufferUsage_CopyDst)
+    buffer1 = utils.create_buffer(dev, 64*4, webgpu.WGPUBufferUsage_Storage | webgpu.WGPUBufferUsage_CopyDst)
 
     # Pass-in test data
-    float_array = np.array([1.0]*64, dtype=np.float16)
+    float_array = np.array([1.0]*64, dtype=np.float32)
     utils.write_buffer(dev, buffer1, 0, bytearray(float_array.tobytes()))
 
-    buffer2 = utils.create_buffer(dev, 64*2, webgpu.WGPUBufferUsage_Storage | webgpu.WGPUBufferUsage_CopySrc)
+    buffer2 = utils.create_buffer(dev, 64*4, webgpu.WGPUBufferUsage_Storage | webgpu.WGPUBufferUsage_CopySrc)
     print(buffer2)
 
     # Setup layout and bindings
@@ -57,11 +58,11 @@ if __name__ == "__main__":
     bindings = [
         {
             "binding": 0,
-            "resource": {"buffer": buffer1, "offset": 0, "size": 64*2},
+            "resource": {"buffer": buffer1, "offset": 0, "size": 64*4},
         },
         {
             "binding": 1,
-            "resource": {"buffer": buffer2, "offset": 0, "size": 64*2},
+            "resource": {"buffer": buffer2, "offset": 0, "size": 64*4},
         },
     ]
 
@@ -88,5 +89,5 @@ if __name__ == "__main__":
     utils.submit(dev, [cb_buffer])
     byte_array = utils.read_buffer(dev, buffer2)
 
-    half_float_array = np.frombuffer(byte_array, dtype=np.float16)
+    half_float_array = np.frombuffer(byte_array, dtype=np.float32)
     print(half_float_array)
