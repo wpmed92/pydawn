@@ -24,8 +24,10 @@ if __name__ == "__main__":
         @compute
         @workgroup_size(64)
         fn main(@builtin(global_invocation_id) index: vec3<u32>) {
-            var a = subgroup_matrix_left<f32, 8, 8>(42.0);
-            subgroupMatrixStore(&data2, 0, a, false, 8);
+            var a = subgroup_matrix_left<f32, 8, 8>(2.12);
+            var b = subgroup_matrix_right<f32, 8, 8>(4.12);
+            var res: subgroup_matrix_result<f32,8,8> = subgroupMatrixMultiply<f32>(a,b);
+            subgroupMatrixStore(&data2, 0, res, false, 8);
         }
     """
     shader_module = utils.create_shader_module(dev, shader_source)
