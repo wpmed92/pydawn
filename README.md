@@ -40,6 +40,10 @@ For more details see `examples/query_set.py`
 
 * [tinygrad](https://github.com/tinygrad/tinygrad) - tinygrad is a deep learning framework, and in its WebGPU backend it uses the Dawn binaries from pydawn. It uses the same autogened python around the binaries as pydawn.
 
+## Experimental
+
+The `experimental` folders in `pydawn`, `pydawn/lib`, and `examples` contain code related to experimental Dawn builds. Currently pydawn experimental is used to test the new `chromium_experimental_subgroup_matrix` feature.
+
 ## Supported platforms
 
 | Platform | Architectures     | Backend         |

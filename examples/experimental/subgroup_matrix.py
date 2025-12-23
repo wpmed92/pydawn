@@ -1,4 +1,4 @@
-from pydawn import utils, webgpu
+from pydawn.experimental import utils, webgpu
 import numpy as np
 
 if __name__ == "__main__":
@@ -6,39 +6,42 @@ if __name__ == "__main__":
     adapter = utils.request_adapter_sync(power_preference=webgpu.WGPUPowerPreference_HighPerformance)
 
     # Creating a device
+    # Request ChromiumExperimentalSubgroupMatrix features
     dev = utils.request_device_sync(adapter, [webgpu.WGPUFeatureName_ChromiumExperimentalSubgroupMatrix])
 
-    print(utils.supported_features(adapter))
+    # Print out the types of subgroup matrix configurations supported by the adapter
     utils.get_adapter_info(dev)
+
     # Creating a shader module
     shader_source = """
+        // enable the subgroup_matrix feature in wgsl
         enable chromium_experimental_subgroup_matrix;
+
+        // define the output buffer where we will store our subgroup matrix
         @group(0) @binding(0)
-        var<storage,read> data1: array<f32>;
+        var<storage,read_write> output: array<f32>;
 
-        @group(0) @binding(1)
-        var<storage,read_write> data2: array<f32>;
-
-        
-        var<workgroup> arg_0 : array<f32, 64>;
         @compute
-        @workgroup_size(64)
+        @workgroup_size(32)
         fn main(@builtin(global_invocation_id) index: vec3<u32>) {
-            var a = subgroup_matrix_left<f32, 8, 8>(2.12);
-            var b = subgroup_matrix_right<f32, 8, 8>(4.12);
-            var res: subgroup_matrix_result<f32,8,8> = subgroupMatrixMultiply<f32>(a,b);
-            subgroupMatrixStore(&data2, 0, res, false, 8);
+            // In WebGPU there are 3 types when dealing with subgroup matrices:
+            // -> subgroup_matrix_left
+            // -> subgroup_matrix_right
+            // -> subgroup_matrix_result
+            var lhs = subgroup_matrix_left<f32, 8, 8>(2.12);
+            var rhs = subgroup_matrix_right<f32, 8, 8>(4.12);
+
+            // Performs lhs@rhs
+            var res: subgroup_matrix_result<f32,8,8> = subgroupMatrixMultiply<f32>(lhs, rhs);
+
+            // Stores the subgroup matrix in the output buffer
+            subgroupMatrixStore(&output, 0, res, false, 8);
         }
     """
     shader_module = utils.create_shader_module(dev, shader_source)
-    buffer1 = utils.create_buffer(dev, 64*4, webgpu.WGPUBufferUsage_Storage | webgpu.WGPUBufferUsage_CopyDst)
+    output_size = 64*4
+    output = utils.create_buffer(dev, output_size, webgpu.WGPUBufferUsage_Storage | webgpu.WGPUBufferUsage_CopySrc)
 
-    # Pass-in test data
-    float_array = np.array([1.0]*64, dtype=np.float32)
-    utils.write_buffer(dev, buffer1, 0, bytearray(float_array.tobytes()))
-
-    buffer2 = utils.create_buffer(dev, 64*4, webgpu.WGPUBufferUsage_Storage | webgpu.WGPUBufferUsage_CopySrc)
-    print(buffer2)
 
     # Setup layout and bindings
     binding_layouts = [
@@ -46,25 +49,14 @@ if __name__ == "__main__":
             "binding": 0,
             "visibility": webgpu.WGPUShaderStage_Compute,
             "buffer": {
-                "type": webgpu.WGPUBufferBindingType_ReadOnlyStorage,
-            },
-        },
-        {
-            "binding": 1,
-            "visibility": webgpu.WGPUShaderStage_Compute,
-            "buffer": {
                 "type": webgpu.WGPUBufferBindingType_Storage,
             },
-        },
+        }
     ]
     bindings = [
         {
             "binding": 0,
-            "resource": {"buffer": buffer1, "offset": 0, "size": 64*4},
-        },
-        {
-            "binding": 1,
-            "resource": {"buffer": buffer2, "offset": 0, "size": 64*4},
+            "resource": {"buffer": output, "offset": 0, "size": output_size},
         },
     ]
 
@@ -89,7 +81,9 @@ if __name__ == "__main__":
     utils.end_compute_pass(compute_pass)
     cb_buffer = utils.command_encoder_finish(command_encoder)
     utils.submit(dev, [cb_buffer])
-    byte_array = utils.read_buffer(dev, buffer2)
+    byte_array = utils.read_buffer(dev, output)
 
-    half_float_array = np.frombuffer(byte_array, dtype=np.float32)
-    print(half_float_array)
+    matmul_output = np.frombuffer(byte_array, dtype=np.float32)
+    print(matmul_output)
+    expected = (np.full((8, 8), 2.12) @ np.full((8, 8), 4.12)).reshape(64)
+    np.testing.assert_allclose(matmul_output, expected, atol=1e-5)
