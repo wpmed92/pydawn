@@ -3,58 +3,64 @@ import numpy as np
 
 if __name__ == "__main__":
     rows, cols = 1024, 1024
-    A = np.random.rand(rows, cols).astype(np.float32)
-    B = np.random.rand(rows, cols).astype(np.float32)
+    tile_dim = 8
+    # replace with np.float32 to run the whole matmul in f32
+    # default is mixed-precision matmul, where we accumulate into f32 result matrix
+    dtype = np.float16
+    shader_dtype = 'f16' if dtype == np.float16 else 'f32'
+    A = np.random.rand(rows, cols).astype(dtype)
+    B = np.random.rand(rows, cols).astype(dtype)
 
     # Creating an adapter
     adapter = utils.request_adapter_sync(power_preference=webgpu.WGPUPowerPreference_HighPerformance)
 
     # Creating a device
     # Request ChromiumExperimentalSubgroupMatrix features
-    dev = utils.request_device_sync(adapter, [webgpu.WGPUFeatureName_ChromiumExperimentalSubgroupMatrix, webgpu.WGPUFeatureName_Subgroups])
+    features = [webgpu.WGPUFeatureName_ChromiumExperimentalSubgroupMatrix, webgpu.WGPUFeatureName_Subgroups]
+    if dtype == np.float16: features += [webgpu.WGPUFeatureName_ShaderF16]
+    dev = utils.request_device_sync(adapter, features)
 
     # Print out the types of subgroup matrix configurations supported by the adapter
     utils.get_adapter_info(dev)
 
     # Creating a shader module
-    shader_source = """
-        // enable the subgroup_matrix feature in wgsl
+    shader_source = f"""
+        // If f16 is used, we need to enable the feature
+        {'enable f16;' if dtype == np.float16 else ''}
         enable chromium_experimental_subgroup_matrix;
         enable subgroups;
         requires subgroup_id;
 
-        // define the output buffer where we will store our subgroup matrix
         @group(0) @binding(0)
-        var<storage,read> mat_a: array<f32>;
+        var<storage,read> mat_a: array<{shader_dtype}>;
 
         @group(0) @binding(1)
-        var<storage,read> mat_b: array<f32>;
+        var<storage,read> mat_b: array<{shader_dtype}>;
 
         @group(0) @binding(2)
         var<storage,read_write> output: array<f32>;
-
-        // exactly one 8x8 subgroup
+        
         @compute
         @workgroup_size(64)
         fn main(@builtin(workgroup_id) wid: vec3<u32>,
-                @builtin(subgroup_id) subgroup_id : u32) {
+                @builtin(subgroup_id) subgroup_id : u32) {{
             var acc: subgroup_matrix_result<f32, 8, 8> = subgroup_matrix_result<f32, 8, 8>(0.0);
-            for (var k = 0u; k < 1024u; k+= 8u) {
-                var lhs_offset = (wid.y * 8u * 1024) + k;
-                var rhs_offset = k * 1024 + (wid.x * 8);
-                let stride = 1024u;
-                var lhs = subgroupMatrixLoad<subgroup_matrix_left<f32, 8, 8>>(&mat_a, lhs_offset, false, stride);
-                var rhs = subgroupMatrixLoad<subgroup_matrix_right<f32, 8, 8>>(&mat_b, rhs_offset, false, stride);
+            let stride = {cols}u;
+            for (var k = 0u; k < {cols}u; k+= {tile_dim}u) {{
+                let lhs_offset = (wid.y * {tile_dim}u * {cols}u) + k;
+                let rhs_offset = k * {cols}u + (wid.x * {tile_dim}u);
+                let lhs = subgroupMatrixLoad<subgroup_matrix_left<{shader_dtype}, 8, 8>>(&mat_a, lhs_offset, false, stride);
+                let rhs = subgroupMatrixLoad<subgroup_matrix_right<{shader_dtype}, 8, 8>>(&mat_b, rhs_offset, false, stride);
                 acc = subgroupMatrixMultiplyAccumulate(lhs, rhs, acc);
-            }
+            }}
 
-            var storeOffset = (wid.y * 8u * 1024u) + (wid.x * 8u);
-            subgroupMatrixStore(&output, storeOffset, acc, false, 1024);
-        }
+            var storeOffset = (wid.y * {tile_dim}u * {cols}u) + (wid.x * {tile_dim}u);
+            subgroupMatrixStore(&output, storeOffset, acc, false, stride);
+        }}
     """
     shader_module = utils.create_shader_module(dev, shader_source)
-    matrix_buffer_size = rows*cols*4
-
+    matrix_buffer_size = rows*cols*(4 if dtype == np.float32 else 2)
+    output_buffer_size = rows*cols*4
     # A
     mat_a = utils.create_buffer(dev, matrix_buffer_size, webgpu.WGPUBufferUsage_Storage | webgpu.WGPUBufferUsage_CopyDst)
     utils.write_buffer(dev, mat_a, 0, bytearray(A.tobytes()))
@@ -64,7 +70,7 @@ if __name__ == "__main__":
     utils.write_buffer(dev, mat_b, 0, bytearray(B.tobytes()))
 
     # C
-    output = utils.create_buffer(dev, matrix_buffer_size, webgpu.WGPUBufferUsage_Storage | webgpu.WGPUBufferUsage_CopySrc)
+    output = utils.create_buffer(dev, output_buffer_size, webgpu.WGPUBufferUsage_Storage | webgpu.WGPUBufferUsage_CopySrc)
 
 
     # Setup layout and bindings
@@ -102,7 +108,7 @@ if __name__ == "__main__":
         },
         {
             "binding": 2,
-            "resource": {"buffer": output, "offset": 0, "size": matrix_buffer_size},
+            "resource": {"buffer": output, "offset": 0, "size": output_buffer_size},
         },
     ]
 
@@ -123,7 +129,7 @@ if __name__ == "__main__":
 
     utils.set_pipeline(compute_pass, compute_pipeline)
     utils.set_bind_group(compute_pass, bind_group)
-    utils.dispatch_workgroups(compute_pass, rows//8, cols//8, 1)
+    utils.dispatch_workgroups(compute_pass, rows//tile_dim, cols//tile_dim, 1)
     utils.end_compute_pass(compute_pass)
     cb_buffer = utils.command_encoder_finish(command_encoder)
     utils.submit(dev, [cb_buffer])
@@ -131,4 +137,4 @@ if __name__ == "__main__":
 
     matmul_output = np.frombuffer(byte_array, dtype=np.float32)
     print(matmul_output)
-    np.testing.assert_allclose(matmul_output.reshape(1024,1024), A @ B, atol=1e-5)
+    np.testing.assert_allclose(matmul_output.reshape(1024,1024), A @ B, atol=1e-2, rtol=1e-3)
