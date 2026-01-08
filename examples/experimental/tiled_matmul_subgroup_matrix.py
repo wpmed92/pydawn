@@ -4,9 +4,8 @@ import numpy as np
 if __name__ == "__main__":
     rows, cols = 1024, 1024
     tile_dim = 8
-    # replace with np.float32 to run the whole matmul in f32
-    # default is mixed-precision matmul, where we accumulate into f32 result matrix
-    dtype = np.float16
+    # replace with np.float16 for mixed-precision matmul
+    dtype = np.float32
     shader_dtype = 'f16' if dtype == np.float16 else 'f32'
     A = np.random.rand(rows, cols).astype(dtype)
     B = np.random.rand(rows, cols).astype(dtype)
