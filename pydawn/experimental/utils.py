@@ -2,12 +2,15 @@ from pydawn.experimental import webgpu
 import ctypes
 import os
 import sys
+from typing import List, TypeAlias
 
 class ResultContainer:
     def __init__(self):
         self.msg = None
         self.status = None
         self.value = None
+
+WGPUSubgroupMatrixConfig: TypeAlias = webgpu.WGPUSubgroupMatrixConfig # type: ignore
 
 instDesc = webgpu.WGPUInstanceDescriptor()
 required_inst_features = [webgpu.WGPUInstanceFeatureName_TimedWaitAny]
@@ -67,41 +70,33 @@ def request_adapter_sync(power_preference):
 
     return result.value
 
-def get_adapter_info(dev):
+def get_subgroup_matrix_configs(dev) -> List[WGPUSubgroupMatrixConfig]:
     info = webgpu.WGPUAdapterInfo()
     subgroup = webgpu.WGPUAdapterPropertiesSubgroupMatrixConfigs()
     subgroup.chain.sType = webgpu.WGPUSType_AdapterPropertiesSubgroupMatrixConfigs
     subgroup.chain.next = None
     info.nextInChain = ctypes.pointer(subgroup.chain)
     status = webgpu.wgpuDeviceGetAdapterInfo(dev, info)
-    
     it = info.nextInChain
+    out_configs = []
     try:
         while it != None and it.contents !=None:
             if it.contents.sType == webgpu.WGPUSType_AdapterPropertiesSubgroupMatrixConfigs:
                 subgroup_ptr = ctypes.cast(
                     it,
                     ctypes.POINTER(webgpu.WGPUAdapterPropertiesSubgroupMatrixConfigs))
-                print(f"num subgroup matrix configs={subgroup_ptr.contents.configCount}")
-
                 for i in range(0, subgroup_ptr.contents.configCount):
                     config_ptr = ctypes.cast(
                     subgroup_ptr.contents.configs,
                     ctypes.POINTER(webgpu.WGPUSubgroupMatrixConfig))
                     cfg = config_ptr[i]
-
-                    print(f"Config {i}:")
-                    print("  componentType:", webgpu.WGPUSubgroupMatrixComponentType__enumvalues[cfg.componentType])
-                    print("  resultComponentType:",webgpu.WGPUSubgroupMatrixComponentType__enumvalues[cfg.resultComponentType])
-                    print("  M:", cfg.M)
-                    print("  N:", cfg.N)
-                    print("  K:", cfg.K)
+                    out_configs.append(cfg)
                 
             it = it.contents.next
     except ValueError:
         pass
 
-    print(f"max subgroup size={info.subgroupMaxSize}")
+    return out_configs
 
 def request_device_sync(adapter, required_features = []):
     assert adapter is not None, "adapter should not be none"
