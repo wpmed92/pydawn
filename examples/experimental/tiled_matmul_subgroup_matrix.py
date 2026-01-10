@@ -3,7 +3,6 @@ import numpy as np
 
 if __name__ == "__main__":
     rows, cols = 1024, 1024
-    tile_dim = 8
     # replace with np.float16 for mixed-precision matmul
     dtype = np.float32
     shader_dtype = 'f16' if dtype == np.float16 else 'f32'
@@ -19,8 +18,14 @@ if __name__ == "__main__":
     if dtype == np.float16: features += [webgpu.WGPUFeatureName_ShaderF16]
     dev = utils.request_device_sync(adapter, features)
 
-    # Print out the types of subgroup matrix configurations supported by the adapter
-    utils.get_adapter_info(dev)
+    # Get available SubgroupMatrix configurations
+    configs = utils.get_subgroup_matrix_configs(dev)
+
+    # We expect these two configs on Metal. TODO: further parameterize this
+    f32_matrix_config, f16_matrix_config = configs[0], configs[1]
+
+    # M x N = M x K @ K x N
+    M, N, K = f32_matrix_config.M, f32_matrix_config.N, f32_matrix_config.K
 
     # Creating a shader module
     shader_source = f"""
@@ -40,20 +45,20 @@ if __name__ == "__main__":
         var<storage,read_write> output: array<f32>;
         
         @compute
-        @workgroup_size(64)
+        @workgroup_size({M*N})
         fn main(@builtin(workgroup_id) wid: vec3<u32>,
                 @builtin(subgroup_id) subgroup_id : u32) {{
-            var acc: subgroup_matrix_result<f32, 8, 8> = subgroup_matrix_result<f32, 8, 8>(0.0);
+            var acc: subgroup_matrix_result<f32, {M}, {N}> = subgroup_matrix_result<f32, {M}, {N}>(0.0);
             let stride = {cols}u;
-            for (var k = 0u; k < {cols}u; k+= {tile_dim}u) {{
-                let lhs_offset = (wid.y * {tile_dim}u * {cols}u) + k;
-                let rhs_offset = k * {cols}u + (wid.x * {tile_dim}u);
-                let lhs = subgroupMatrixLoad<subgroup_matrix_left<{shader_dtype}, 8, 8>>(&mat_a, lhs_offset, false, stride);
-                let rhs = subgroupMatrixLoad<subgroup_matrix_right<{shader_dtype}, 8, 8>>(&mat_b, rhs_offset, false, stride);
+            for (var k = 0u; k < {cols}u; k+= {K}u) {{
+                let lhs_offset = (wid.y * {K}u * {cols}u) + k;
+                let rhs_offset = k * {cols}u + (wid.x * {K}u);
+                let lhs = subgroupMatrixLoad<subgroup_matrix_left<{shader_dtype}, {M}, {N}>>(&mat_a, lhs_offset, false, stride);
+                let rhs = subgroupMatrixLoad<subgroup_matrix_right<{shader_dtype}, {M}, {N}>>(&mat_b, rhs_offset, false, stride);
                 acc = subgroupMatrixMultiplyAccumulate(lhs, rhs, acc);
             }}
 
-            var storeOffset = (wid.y * {tile_dim}u * {cols}u) + (wid.x * {tile_dim}u);
+            var storeOffset = (wid.y * {K}u * {cols}u) + (wid.x * {K}u);
             subgroupMatrixStore(&output, storeOffset, acc, false, stride);
         }}
     """
@@ -128,7 +133,7 @@ if __name__ == "__main__":
 
     utils.set_pipeline(compute_pass, compute_pipeline)
     utils.set_bind_group(compute_pass, bind_group)
-    utils.dispatch_workgroups(compute_pass, rows//tile_dim, cols//tile_dim, 1)
+    utils.dispatch_workgroups(compute_pass, rows//K, cols//K, 1)
     utils.end_compute_pass(compute_pass)
     cb_buffer = utils.command_encoder_finish(command_encoder)
     utils.submit(dev, [cb_buffer])
